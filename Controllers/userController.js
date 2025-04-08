@@ -168,7 +168,7 @@ const updateUserDetails = async (req, res) => {
         const { followKnchOnX, Dispathch_Wallet, Join_Group, Join_Channel, testnet_faucet_claim, hashes, GenerateMainnetAccessCode, enterMainnetAccessCode, bridge, mainnet_faucet_claim, RegisterKaanchDomain, invide_code, Referral_Number, points } = req.body;
 
         const updatedInfo = await User.findOneAndUpdate(
-            { jwtToken: token }, // Find user by token
+            { jwtToken: token },
             {
                 $set: {
                     followKnchOnX,

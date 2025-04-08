@@ -17,7 +17,28 @@ const Authentication = async (req, res, next) => {
     const tokenWithoutBearer = tokenParts[1];
     // console.log("tokenWithoutBearer : ", tokenWithoutBearer)
 
-    const rootUser = await User.findOne({ jwtToken: tokenWithoutBearer });
+    // const rootUser = await User.findOne({ jwtToken: tokenWithoutBearer });
+    const rootUser = await User.aggregate([
+        { $match: { jwtToken: tokenWithoutBearer } },
+        {
+            $lookup: {
+                from: "test_nets",
+                localField: "_id",
+                foreignField: "user_id",
+                as: "testnetData"
+            }
+        },
+        { $unwind: { path: "$testnetData", preserveNullAndEmptyArrays: true } },
+        {
+            $lookup: {
+                from: "main_nets",
+                localField: "_id",
+                foreignField: "user_id",
+                as: "mainnetData"
+            }
+        },
+        { $unwind: { path: "$mainnetData", preserveNullAndEmptyArrays: true } },
+    ]);
     if (!rootUser) {
         return res.status(404).send({ data: { message: "User not found with this token.", status: false } })
     }
