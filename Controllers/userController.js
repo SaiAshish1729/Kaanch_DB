@@ -267,9 +267,52 @@ const updateUserDetails = async (req, res) => {
     }
 }
 
+// top 50 highest point users
+const topFiftyPointUsers = async (req, res) => {
+    try {
+        const topUsers = await User.aggregate([
+            {
+                $addFields: {
+                    pointsAsNumber: { $toInt: "$points" }
+                }
+            },
+            {
+                $sort: { pointsAsNumber: -1 } // Descending
+            },
+            {
+                $limit: 50
+            },
+            {
+                $project: {
+                    _id: 1,
+                    address: 1,
+                    referralId: 1,
+                    invide_code: 1,
+                    points: 1
+                }
+            }
+        ]);
+
+        return res.status(200).send({
+            success: true,
+            message: "Top 50 users fetched successfully.",
+            data: topUsers
+        });
+
+    } catch (error) {
+        console.error("Error fetching top users:", error);
+        return res.status(500).send({
+            success: false,
+            message: "Server error while fetching top users.",
+            error
+        });
+    }
+};
+
 module.exports = {
     refferedUser,
     userDetails,
     updateUserDetails,
     twitterAuth,
+    topFiftyPointUsers,
 }
