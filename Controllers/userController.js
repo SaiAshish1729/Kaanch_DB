@@ -170,7 +170,7 @@ const TWITTER_OAUTH_CLIENT_SECRET = '9EUyAcfJG_GytwXVLRMcm24N_1Bh8A24deQoUJ_e_qr
 const updateUserDetails = async (req, res) => {
     try {
         const user = req.user;
-        console.log("User : ", user.points)
+        // console.log("User : ", user.points)
         const userId = user._id.toString();
         const {
             // testNet data
@@ -215,7 +215,7 @@ const updateUserDetails = async (req, res) => {
             return res.status(400).send({ message: "Claim mainnet faucet before registering domain." });
         }
 
-        // Step 3: Build update objects
+        // Step 3
         const testnetUpdates = {};
         const mainnetUpdates = {};
 
@@ -238,25 +238,28 @@ const updateUserDetails = async (req, res) => {
         if (mainnet_faucet_claim !== undefined) mainnetUpdates.mainnet_faucet_claim = mainnet_faucet_claim;
         if (RegisterKaanchDomain !== undefined) mainnetUpdates.RegisterKaanchDomain = RegisterKaanchDomain;
 
-        // Step 4: Perform updates
+        // Step 4
         // console.log(testnetUpdates)
         // console.log(mainnetUpdates);
         if (Object.keys(testnetUpdates).length > 0) {
-            console.log(testnetUpdates)
+            // console.log(testnetUpdates)
             await Test_Net.updateOne({ user_id: userId }, { $set: testnetUpdates });
             if (GenerateMainnetAccessCode !== "") {
                 const currentPoints = parseInt(user.points);
                 const newPoint = currentPoints + 100;
                 await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() })
-                // console.log("Here we go...")
             }
         }
 
         if (Object.keys(mainnetUpdates).length > 0) {
             await Main_Net.updateOne({ user_id: userId }, { $set: mainnetUpdates });
+            const currentPoints = parseInt(user.points);
+            const newPoint = currentPoints + 10;
+            await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() })
         }
         return res.status(200).send({
             success: true, message: "User details updated successfully.",
+            // data: req.user
         });
     } catch (error) {
         console.log(error);
