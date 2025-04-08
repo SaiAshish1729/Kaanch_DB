@@ -39,10 +39,12 @@ const Authentication = async (req, res, next) => {
         },
         { $unwind: { path: "$mainnetData", preserveNullAndEmptyArrays: true } },
     ]);
+
     if (!rootUser) {
         return res.status(404).send({ data: { message: "User not found with this token.", status: false } })
     }
-    req.user = rootUser;
+    const objData = rootUser[0];
+    req.user = objData;
     next();
 
 }

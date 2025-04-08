@@ -8,7 +8,7 @@ const mainNetSchema = new mongoose.Schema({
     },
     bridge: {
         type: String,
-        default: false
+        default: null
     },
     mainnet_faucet_claim: {
         type: Boolean,

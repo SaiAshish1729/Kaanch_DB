@@ -2,6 +2,9 @@ const User = require("../Models/userSchema");
 const { generateJWTtoken, twitterOauthTokenParams, BasicAuthToken } = require("../utility");
 const ethers = require("ethers")
 const axios = require("axios");
+const { default: mongoose } = require("mongoose");
+const Test_Net = require("../Models/testNetSchema");
+const Main_Net = require("../Models/mainNetSchema");
 
 const refferedUser = async (req, res) => {
     try {
@@ -35,8 +38,17 @@ const refferedUser = async (req, res) => {
                     address,
                     referralId,
                 });
-
                 await newUser.save();
+
+                const testNet = new Test_Net({
+                    user_id: newUser._id
+                })
+                await testNet.save();
+                const mainNet = new Main_Net({
+                    user_id: newUser._id
+                });
+                await mainNet.save();
+
                 res.status(201).json({
                     data: {
                         status: true, message: "User registered and sign in successfully.", token,
@@ -157,39 +169,88 @@ const TWITTER_OAUTH_CLIENT_SECRET = '9EUyAcfJG_GytwXVLRMcm24N_1Bh8A24deQoUJ_e_qr
 
 const updateUserDetails = async (req, res) => {
     try {
-        const { token } = req.query;
-        if (!token) {
-            return res.status(400).json({ success: false, message: "Token is required." });
-        }
-        const user = await User.findOne({ jwtToken: token });
-        if (!user) {
-            return res.status(404).json({ success: false, message: "User not found." });
-        }
-        const { followKnchOnX, Dispathch_Wallet, Join_Group, Join_Channel, testnet_faucet_claim, hashes, GenerateMainnetAccessCode, enterMainnetAccessCode, bridge, mainnet_faucet_claim, RegisterKaanchDomain, invide_code, Referral_Number, points } = req.body;
+        const user = req.user;
+        // console.log("User : ", user)
+        const userId = user._id.toString();
+        const {
+            // testNet data
+            twitterUID, displayName, photoURL,
+            followKnchOnX, Dispathch_Wallet, Join_Group, testnet_faucet_claim, hashes, GenerateMainnetAccessCode,
+            // mainNet data
+            bridge, mainnet_faucet_claim, RegisterKaanchDomain } = req.body;
 
-        const updatedInfo = await User.findOneAndUpdate(
-            { jwtToken: token },
-            {
-                $set: {
-                    followKnchOnX,
-                    Dispathch_Wallet,
-                    Join_Group,
-                    Join_Channel,
-                    testnet_faucet_claim,
-                    hashes,
-                    GenerateMainnetAccessCode,
-                    enterMainnetAccessCode,
-                    bridge,
-                    mainnet_faucet_claim,
-                    RegisterKaanchDomain,
-                    invide_code,
-                    Referral_Number,
-                    points
-                }
-            },
-            { new: true }
-        );
-        return res.status(200).send({ success: true, message: "User details updated successfully.", data: updatedInfo });
+        const testNetData = await Test_Net.findOne({ user_id: userId });
+        // console.log("testNet : ", testNetData);
+        const mainNetData = await Main_Net.findOne({ user_id: userId });
+        if (!testNetData || !mainNetData) {
+            return res.status(404).send({ message: "User's testnet or mainnet data not found" });
+        }
+
+        if (followKnchOnX && testNetData.twitterId.twitterUID === null) {
+            return res.status(400).send({ message: "Please connect X before following us." });
+        }
+
+        if (Dispathch_Wallet && !testNetData.followKnchOnX) {
+            return res.status(400).send({ message: "Please follow on followKnchOnX before updating Dispatch Wallet." });
+        }
+
+        if (Join_Group && !testNetData.Dispathch_Wallet) {
+            return res.status(400).send({ message: "Please complete Dispatch Wallet before joining group." });
+        }
+
+        if (testnet_faucet_claim && !testNetData.Join_Group) {
+            return res.status(400).send({ message: "Join the group before claiming testnet faucet." });
+        }
+
+        if (GenerateMainnetAccessCode && !testNetData.testnet_faucet_claim) {
+            return res.status(400).send({ message: "Claim the testnet faucet before generating mainnet access code." });
+        }
+
+        // mainNet checkinngs ...
+        if (mainnet_faucet_claim && !mainNetData.bridge === null) {
+            return res.status(400).send({ message: "Bridge is required before claiming mainnet faucet." });
+        }
+
+        if (RegisterKaanchDomain && !mainNetData.mainnet_faucet_claim) {
+            return res.status(400).send({ message: "Claim mainnet faucet before registering domain." });
+        }
+
+        // Step 3: Build update objects
+        const testnetUpdates = {};
+        const mainnetUpdates = {};
+
+        if (twitterUID || displayName || photoURL) {
+            testnetUpdates["twitterId"] = {
+                twitterUID: twitterUID ?? testNetData.twitterId.twitterUID,
+                displayName: displayName ?? testNetData.twitterId.displayName,
+                photoURL: photoURL ?? testNetData.twitterId.photoURL
+            };
+        }
+
+        if (followKnchOnX !== undefined) testnetUpdates.followKnchOnX = followKnchOnX;
+        if (Dispathch_Wallet !== undefined) testnetUpdates.Dispathch_Wallet = Dispathch_Wallet;
+        if (Join_Group !== undefined) testnetUpdates.Join_Group = Join_Group;
+        if (testnet_faucet_claim !== undefined) testnetUpdates.testnet_faucet_claim = testnet_faucet_claim;
+        if (hashes !== undefined) testnetUpdates.hashes = hashes;
+        if (GenerateMainnetAccessCode !== undefined) testnetUpdates.GenerateMainnetAccessCode = GenerateMainnetAccessCode;
+
+        if (bridge !== undefined) mainnetUpdates.bridge = bridge;
+        if (mainnet_faucet_claim !== undefined) mainnetUpdates.mainnet_faucet_claim = mainnet_faucet_claim;
+        if (RegisterKaanchDomain !== undefined) mainnetUpdates.RegisterKaanchDomain = RegisterKaanchDomain;
+
+        // Step 4: Perform updates
+        console.log(testnetUpdates)
+        if (Object.keys(testnetUpdates).length > 0) {
+            console.log(testnetUpdates)
+            await Test_Net.updateOne({ user_id: userId }, { $set: testnetUpdates });
+        }
+
+        if (Object.keys(mainnetUpdates).length > 0) {
+            await Main_Net.updateOne({ user_id: userId }, { $set: mainnetUpdates });
+        }
+        return res.status(200).send({
+            success: true, message: "User details updated successfully.",
+        });
     } catch (error) {
         console.log(error);
         return res.status(500).send({ message: "Server error while updating user details.", error });

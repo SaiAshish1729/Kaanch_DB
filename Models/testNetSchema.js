@@ -31,11 +31,11 @@ const testNetSchema = new mongoose.Schema({
     },  // Balance check faucet claim testnet
     hashes: {
         type: String,
-        default: false
+        default: null
     },
     GenerateMainnetAccessCode: {
         type: String,
-        default: false
+        default: null
     },
 
 });
