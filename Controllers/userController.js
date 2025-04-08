@@ -207,7 +207,7 @@ const updateUserDetails = async (req, res) => {
         }
 
         // mainNet checkinngs ...
-        if (mainnet_faucet_claim && !mainNetData.bridge === null) {
+        if (mainnet_faucet_claim && !mainNetData.bridge) {
             return res.status(400).send({ message: "Bridge is required before claiming mainnet faucet." });
         }
 
@@ -239,9 +239,9 @@ const updateUserDetails = async (req, res) => {
         if (RegisterKaanchDomain !== undefined) mainnetUpdates.RegisterKaanchDomain = RegisterKaanchDomain;
 
         // Step 4: Perform updates
-        console.log(testnetUpdates)
+        // console.log(testnetUpdates)
+        // console.log(mainnetUpdates);
         if (Object.keys(testnetUpdates).length > 0) {
-            console.log(testnetUpdates)
             await Test_Net.updateOne({ user_id: userId }, { $set: testnetUpdates });
         }
 
