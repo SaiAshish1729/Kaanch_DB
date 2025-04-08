@@ -44,7 +44,29 @@ const Authentication = async (req, res, next) => {
         return res.status(404).send({ data: { message: "User not found with this token.", status: false } })
     }
     const objData = rootUser[0];
+    const customResponse = {
+        _id: objData._id,
+        jwtToken: objData.jwtToken,
+        referralId: objData.referralId,
+        address: objData.address,
+        invide_code: objData.invide_code,
+        points: objData.points,
+        twitterId: objData.testnetData.twitterId,
+        followKnchOnX: objData.testnetData.followKnchOnX,
+        Dispathch_Wallet: objData.testnetData.Dispathch_Wallet,
+        Join_Group: objData.testnetData.Join_Group,
+        testnet_faucet_claim: objData.testnetData.testnet_faucet_claim,
+        hashes: objData.testnetData.hashes,
+        GenerateMainnetAccessCode: objData.testnetData.GenerateMainnetAccessCode,
+
+        // mainNet
+        bridge: objData.mainnetData.bridge,
+        mainnet_faucet_claim: objData.mainnetData.mainnet_faucet_claim,
+        RegisterKaanchDomain: objData.mainnetData.RegisterKaanchDomain,
+    }
+    // console.log(customResponse)
     req.user = objData;
+    req.customizedUser = customResponse
     next();
 
 }

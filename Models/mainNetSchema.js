@@ -16,7 +16,7 @@ const mainNetSchema = new mongoose.Schema({
     },
     RegisterKaanchDomain: {
         type: String,
-        default: false
+        default: null
     },
 
 });

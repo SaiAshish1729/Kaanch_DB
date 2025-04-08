@@ -70,7 +70,7 @@ const refferedUser = async (req, res) => {
 // fetch user details
 const userDetails = async (req, res) => {
     try {
-        const user = req.user;
+        const user = req.customizedUser;
         return res.status(200).send({ data: { status: true, message: "User details fetched successfully.", result: user } });
     } catch (error) {
         console.log(error);
@@ -253,8 +253,17 @@ const updateUserDetails = async (req, res) => {
 
         if (Object.keys(mainnetUpdates).length > 0) {
             await Main_Net.updateOne({ user_id: userId }, { $set: mainnetUpdates });
+
+            // const currentPoints = parseInt(user.points);
+            // const newPoint = currentPoints + 10;
             const currentPoints = parseInt(user.points);
-            const newPoint = currentPoints + 10;
+            let pointsToAdd = 1; // default point
+
+            if (mainnetUpdates.bridge !== undefined && mainnetUpdates.bridge !== "") {
+                pointsToAdd = 10; // award 10 points for bridge
+            }
+
+            const newPoint = currentPoints + pointsToAdd;
             await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() })
         }
         return res.status(200).send({
@@ -308,6 +317,16 @@ const topFiftyPointUsers = async (req, res) => {
         });
     }
 };
+
+// refferals calculation
+const referalCalculations = async (req, res) => {
+    try {
+        // const totalrefferals = await
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({ message: "Server error while calculating referal points.", error });
+    }
+}
 
 module.exports = {
     refferedUser,
