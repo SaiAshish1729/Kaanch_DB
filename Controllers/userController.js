@@ -250,7 +250,7 @@ const updateUserDetails = async (req, res) => {
             }
             return res.status(200).send({
                 data: {
-                    success: true, message: "User details updated successfully.",
+                    status: true, message: "User details updated successfully.",
                     // data: req.user
                 }
             });
@@ -289,7 +289,7 @@ const updateUserDetails = async (req, res) => {
             await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() })
             return res.status(200).send({
                 data: {
-                    success: true, message: "User details updated successfully.",
+                    status: true, message: "User details updated successfully.",
                     // data: req.user
                 }
             });
