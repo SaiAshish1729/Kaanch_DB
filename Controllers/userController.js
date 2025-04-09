@@ -137,6 +137,7 @@ const TWITTER_OAUTH_CLIENT_SECRET = '9EUyAcfJG_GytwXVLRMcm24N_1Bh8A24deQoUJ_e_qr
 const updateUserDetails = async (req, res) => {
     try {
         const user = req.user;
+        const { address } = req.query;
         // console.log("User : ", req.user.referralId)
         const userId = user._id.toString();
         const {
@@ -210,7 +211,17 @@ const updateUserDetails = async (req, res) => {
         if (Dispathch_Wallet !== undefined) testnetUpdates.Dispathch_Wallet = Dispathch_Wallet;
         if (Join_Group !== undefined) testnetUpdates.Join_Group = Join_Group;
         if (testnet_faucet_claim !== undefined) testnetUpdates.testnet_faucet_claim = testnet_faucet_claim;
-        if (hashes !== undefined) testnetUpdates.hashes = hashes;
+        // if (hashes !== undefined) testnetUpdates.hashes = hashes;
+        if (hashes !== undefined) {
+            if (!Array.isArray(hashes)) {
+                return res.status(400).send({ message: "`hashes` must be an array." });
+            }
+            testnetUpdates.hashes = hashes;
+
+            // If you want to merge instead of replacing:
+            // testnetUpdates.hashes = [...new Set([...testNetData.hashes, ...hashes])];
+        }
+
         if (GenerateMainnetAccessCode !== undefined) testnetUpdates.GenerateMainnetAccessCode = GenerateMainnetAccessCode;
 
         if (bridge !== undefined) mainnetUpdates.bridge = bridge;

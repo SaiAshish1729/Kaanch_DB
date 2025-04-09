@@ -35,8 +35,8 @@ const testNetSchema = new mongoose.Schema({
     //     default: null
     // },
     hashes: {
-        type: String,
-        default: null
+        type: [String],
+        default: []
     },
     GenerateMainnetAccessCode: {
         type: String,
