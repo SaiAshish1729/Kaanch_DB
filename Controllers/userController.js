@@ -137,7 +137,10 @@ const TWITTER_OAUTH_CLIENT_SECRET = '9EUyAcfJG_GytwXVLRMcm24N_1Bh8A24deQoUJ_e_qr
 const updateUserDetails = async (req, res) => {
     try {
         const user = req.user;
-        // console.log("User : ", req.user)
+        // console.log("User : ", req.user);
+        if (user === undefined) {
+            return res.status(404).send({ data: { status: false, message: "User not found with provided token." } })
+        }
         const { address } = req.query;
         if (!address) {
             return res.status(403).send({ data: { status: false, message: "Address is missing." } })
