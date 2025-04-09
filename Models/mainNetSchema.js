@@ -23,4 +23,4 @@ const mainNetSchema = new mongoose.Schema({
 
 const Main_Net = new mongoose.model("Main_Net", mainNetSchema);
 
-module.exports = Main_Net
+module.exports = Main_Net                   

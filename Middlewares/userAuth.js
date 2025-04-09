@@ -43,6 +43,7 @@ const Authentication = async (req, res, next) => {
     if (!rootUser) {
         return res.status(404).send({ data: { message: "User not found with this token.", status: false } })
     }
+
     const objData = rootUser[0];
     const customResponse = {
         _id: objData._id,

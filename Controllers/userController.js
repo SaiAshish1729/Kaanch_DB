@@ -70,8 +70,17 @@ const refferedUser = async (req, res) => {
 // fetch user details
 const userDetails = async (req, res) => {
     try {
-        const user = req.customizedUser;
-        return res.status(200).send({ data: { status: true, message: "User details fetched successfully.", result: user } });
+        const { address } = req.query;
+        if (!address) {
+            return res.status(400).send({ message: "Address is missing." });
+        } else {
+            const user = req.customizedUser;
+            if (user.address !== address) {
+                return res.status(403).send({ message: "This address is not matched with the token." });
+            }
+            return res.status(200).send({ data: { status: true, message: "User details fetched successfully.", result: user } });
+        }
+
     } catch (error) {
         console.log(error);
         return res.status(500).send({ message: "Server error while fetching user details.", error });
