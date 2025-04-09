@@ -21,7 +21,8 @@ const userSchema = new mongoose.Schema({
     refferal_bridge_complition_points: {
         type: String,
         default: "0"
-    }
+    },
+
 });
 
 const User = new mongoose.model("User", userSchema);

@@ -216,6 +216,10 @@ const updateUserDetails = async (req, res) => {
                 const newPoint = currentPoints + 100;
                 await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() })
             }
+            return res.status(200).send({
+                success: true, message: "User details updated successfully.",
+                // data: req.user
+            });
         }
 
         if (Object.keys(mainnetUpdates).length > 0) {
@@ -244,13 +248,19 @@ const updateUserDetails = async (req, res) => {
                 const updatePointsWhoRefferdMe = await User.findOneAndUpdate({ _id: whorefferdMe._id }, { points: finalPoint.toString(), refferal_bridge_complition_points: finalPointOfBridgeCompletion });
                 // ==>> find who reffer me area ends
 
+
             }
 
             const newPoint = currentPoints + pointsToAdd;
             await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() })
+            return res.status(200).send({
+                success: true, message: "User details updated successfully.",
+                // data: req.user
+            });
         }
+
         return res.status(200).send({
-            success: true, message: "User details updated successfully.",
+            message: "No info provided.",
             // data: req.user
         });
     } catch (error) {
