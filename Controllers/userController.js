@@ -186,10 +186,17 @@ const updateUserDetails = async (req, res) => {
         const testnetUpdates = {};
         const mainnetUpdates = {};
         // check pre used twitter_id
-        const preUsed = await Test_Net.findOne({ "twitterId.twitterUID": twitterUID });
-        if (preUsed) {
-            return res.status(403).send({ message: "This twitter_id has already used." })
+        if (twitterUID) {
+
+            const preUsed = await Test_Net.findOne({ "twitterId.twitterUID": twitterUID });
+            if (preUsed) {
+                return res.status(403).send({ message: "This twitter_id has already used." })
+            }
         }
+        // const preUsed = await Test_Net.findOne({ "twitterId.twitterUID": twitterUID });
+        // if (preUsed) {
+        //     return res.status(403).send({ message: "This twitter_id has already used." })
+        // }
 
         if (twitterUID || displayName || photoURL) {
             testnetUpdates["twitterId"] = {
