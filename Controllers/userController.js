@@ -72,11 +72,11 @@ const userDetails = async (req, res) => {
     try {
         const { address } = req.query;
         if (!address) {
-            return res.status(400).send({ message: "Address is missing." });
+            return res.status(400).send({ data: { message: "Address is missing." } });
         } else {
             const user = req.customizedUser;
             if (user.address !== address) {
-                return res.status(403).send({ message: "This address is not authentic with the provided token." });
+                return res.status(403).send({ data: { message: "This address is not authentic with the provided token." } });
             }
             return res.status(200).send({ data: { status: true, message: "User details fetched successfully.", result: user } });
         }
