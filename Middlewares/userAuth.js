@@ -47,7 +47,7 @@ const Authentication = async (req, res, next) => {
     const objData = rootUser[0];
     const customResponse = {
         _id: objData?._id,
-        jwtToken: objData?.jwtToken,
+        // jwtToken: objData?.jwtToken,
         referralId: objData?.referralId,
         address: objData?.address,
         invide_code: objData?.invide_code,
