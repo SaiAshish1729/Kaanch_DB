@@ -137,8 +137,14 @@ const TWITTER_OAUTH_CLIENT_SECRET = '9EUyAcfJG_GytwXVLRMcm24N_1Bh8A24deQoUJ_e_qr
 const updateUserDetails = async (req, res) => {
     try {
         const user = req.user;
+        // console.log("User : ", req.user)
         const { address } = req.query;
-        // console.log("User : ", req.user.referralId)
+        if (!address) {
+            return res.status(403).send({ data: { status: false, message: "Address is missing." } })
+        }
+        if (address !== req.user.address) {
+            return res.status(403).send({ data: { message: "Provided address is not matched with the token." } })
+        }
         const userId = user._id.toString();
         const {
             // testNet data
@@ -151,36 +157,36 @@ const updateUserDetails = async (req, res) => {
         // console.log("testNet : ", testNetData);
         const mainNetData = await Main_Net.findOne({ user_id: userId });
         if (!testNetData || !mainNetData) {
-            return res.status(404).send({ message: "User's testnet or mainnet data not found" });
+            return res.status(404).send({ data: { message: "User's testnet or mainnet data not found" } });
         }
 
         if (followKnchOnX && testNetData.twitterId.twitterUID === null) {
-            return res.status(400).send({ message: "Please connect X before following us." });
+            return res.status(400).send({ data: { message: "Please connect X before following us." } });
         }
 
         if (Dispathch_Wallet && !testNetData.followKnchOnX) {
-            return res.status(400).send({ message: "Please follow on followKnchOnX before updating Dispatch Wallet." });
+            return res.status(400).send({ data: { message: "Please follow on followKnchOnX before updating Dispatch Wallet." } });
         }
 
         if (Join_Group && !testNetData.Dispathch_Wallet) {
-            return res.status(400).send({ message: "Please complete Dispatch Wallet before joining group." });
+            return res.status(400).send({ data: { message: "Please complete Dispatch Wallet before joining group." } });
         }
 
         if (testnet_faucet_claim && !testNetData.Join_Group) {
-            return res.status(400).send({ message: "Join the group before claiming testnet faucet." });
+            return res.status(400).send({ data: { message: "Join the group before claiming testnet faucet." } });
         }
 
         if (GenerateMainnetAccessCode && !testNetData.testnet_faucet_claim) {
-            return res.status(400).send({ message: "Claim the testnet faucet before generating mainnet access code." });
+            return res.status(400).send({ data: { message: "Claim the testnet faucet before generating mainnet access code." } });
         }
 
         // mainNet checkinngs ...
         if (mainnet_faucet_claim && !mainNetData.bridge) {
-            return res.status(400).send({ message: "Bridge is required before claiming mainnet faucet." });
+            return res.status(400).send({ data: { message: "Bridge is required before claiming mainnet faucet." } });
         }
 
         if (RegisterKaanchDomain && !mainNetData.mainnet_faucet_claim) {
-            return res.status(400).send({ message: "Claim mainnet faucet before registering domain." });
+            return res.status(400).send({ data: { message: "Claim mainnet faucet before registering domain." } });
         }
 
         // Step 3
@@ -191,7 +197,7 @@ const updateUserDetails = async (req, res) => {
 
             const preUsed = await Test_Net.findOne({ "twitterId.twitterUID": twitterUID });
             if (preUsed) {
-                return res.status(403).send({ message: "This twitter_id has already used." })
+                return res.status(403).send({ data: { message: "This twitter_id has already used." } })
             }
         }
         // const preUsed = await Test_Net.findOne({ "twitterId.twitterUID": twitterUID });
@@ -214,7 +220,7 @@ const updateUserDetails = async (req, res) => {
         // if (hashes !== undefined) testnetUpdates.hashes = hashes;
         if (hashes !== undefined) {
             if (!Array.isArray(hashes)) {
-                return res.status(400).send({ message: "`hashes` must be an array." });
+                return res.status(400).send({ data: { message: "`hashes` must be an array." } });
             }
             testnetUpdates.hashes = hashes;
 
@@ -240,8 +246,10 @@ const updateUserDetails = async (req, res) => {
                 await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() })
             }
             return res.status(200).send({
-                success: true, message: "User details updated successfully.",
-                // data: req.user
+                data: {
+                    success: true, message: "User details updated successfully.",
+                    // data: req.user
+                }
             });
         }
 
@@ -277,14 +285,17 @@ const updateUserDetails = async (req, res) => {
             const newPoint = currentPoints + pointsToAdd;
             await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() })
             return res.status(200).send({
-                success: true, message: "User details updated successfully.",
-                // data: req.user
+                data: {
+                    success: true, message: "User details updated successfully.",
+                    // data: req.user
+                }
             });
         }
 
         return res.status(200).send({
-            message: "No info provided.",
-            // data: req.user
+            data: {
+                message: "No info provided.",
+            }
         });
     } catch (error) {
         console.log(error);
