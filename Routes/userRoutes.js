@@ -5,7 +5,7 @@ const { validateRequest, updateUserValidation } = require("../Validations/userVa
 const { Authentication } = require("../Middlewares/userAuth.js");
 const router = express.Router();
 
-router.post("/refferal", refferedUser);
+router.post("/referral", refferedUser);
 router.get("/user-details", Authentication, userDetails);
 router.get("/auth/twitter/callback", twitterAuth)
 router.put("/update-user-info", Authentication,
