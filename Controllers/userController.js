@@ -243,7 +243,7 @@ const updateUserDetails = async (req, res) => {
         if (Object.keys(testnetUpdates).length > 0) {
             // console.log(testnetUpdates)
             await Test_Net.updateOne({ user_id: userId }, { $set: testnetUpdates });
-            if (GenerateMainnetAccessCode !== null) {
+            if (GenerateMainnetAccessCode) {
                 const currentPoints = parseInt(user.points);
                 const newPoint = currentPoints + 100;
                 await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() })
