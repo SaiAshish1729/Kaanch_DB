@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 // DB Connection
 Connection();
 //Routes
-app.use("/api/v1/user", userRoute);
+app.use("/", userRoute);
 
 app.get("/", (req, res) => {
     res.send("Hello world!");
