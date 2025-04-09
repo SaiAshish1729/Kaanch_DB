@@ -16,7 +16,11 @@ const userSchema = new mongoose.Schema({
     },
     points: {
         type: String,
-        default: 0
+        default: "0"
+    },
+    refferal_bridge_complition_points: {
+        type: String,
+        default: "0"
     }
 });
 

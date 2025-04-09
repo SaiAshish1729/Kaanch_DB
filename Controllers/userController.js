@@ -76,7 +76,7 @@ const userDetails = async (req, res) => {
         } else {
             const user = req.customizedUser;
             if (user.address !== address) {
-                return res.status(403).send({ message: "This address is not matched with the token." });
+                return res.status(403).send({ message: "This address is not authentic with the provided token." });
             }
             return res.status(200).send({ data: { status: true, message: "User details fetched successfully.", result: user } });
         }
@@ -88,10 +88,13 @@ const userDetails = async (req, res) => {
 }
 
 // twitter auth
+// twitter auth
+// twitter auth
 const twitterAuth = async (req, res) => {
     try {
         const { code } = req.query;
-        // console.log("Code : ", code);
+        console.log("Code : ", code);
+        console.log("twitterOauthTokenParams", twitterOauthTokenParams)
 
         const responseType = await axios.post(
             process.env.TWITTER_OAUTH_TOKEN_URL,
@@ -99,12 +102,13 @@ const twitterAuth = async (req, res) => {
             {
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
-                    Authorization: `Basic ${BasicAuthToken}`,
+                    Authorization: ` Basic ${BasicAuthToken}`,
                 },
             }
         );
-        console.log(responseType)
+
         const accessToken = responseType.data.access_token;
+        // console.log("accessToken : ",accessToken)
         // res.status(200).send({data:accessToken,status:true})
         const res2 = await fetch("https://api.x.com/2/users/me", {
             method: "GET",
@@ -116,7 +120,7 @@ const twitterAuth = async (req, res) => {
         const data2 = await res2.json();
         console.log("data2", data2);
         res.status(200).send({
-            // data: data2,
+            data: data2,
             status: true
         })
     } catch (error) {
@@ -130,56 +134,10 @@ const TWITTER_REDIRECT_URI = "https://airdrop.kaanch.com/"
 const TWITTER_CODE_VERIFIER = "8KxxO-RPl0bLSxX5AWwgdiFbMnry_VOKzFeIlVA7NoA"
 const TWITTER_OAUTH_CLIENT_SECRET = '9EUyAcfJG_GytwXVLRMcm24N_1Bh8A24deQoUJ_e_qrA4FBwOH'; //
 
-// const twitterAuth = async (req, res) => {
-//     try {
-//         const { code } = req.query;
-//         if (!code) return res.status(400).send({ message: "Missing auth code" });
-
-//         const tokenParams = new URLSearchParams({
-//             client_id: TWITTER_OAUTH_CLIENT_ID,
-//             code_verifier: TWITTER_CODE_VERIFIER,
-//             redirect_uri: TWITTER_REDIRECT_URI,
-//             grant_type: "authorization_code",
-//             code: code,
-//         });
-
-//         const basicAuth = Buffer.from(
-//             `${TWITTER_OAUTH_CLIENT_ID}:${TWITTER_OAUTH_CLIENT_SECRET}`
-//         ).toString("base64");
-
-//         const response = await axios.post(
-//             TWITTER_OAUTH_TOKEN_URL,
-//             tokenParams.toString(),
-//             {
-//                 headers: {
-//                     "Content-Type": "application/x-www-form-urlencoded",
-//                     Authorization: `Basic ${basicAuth}`,
-//                 },
-//             }
-//         );
-
-//         const accessToken = response.data.access_token;
-
-//         const res2 = await fetch("https://api.twitter.com/2/users/me", {
-//             headers: {
-//                 Authorization: `Bearer ${accessToken}`,
-//             },
-//         });
-
-//         const data2 = await res2.json();
-//         res.status(200).send({ data: data2, status: true });
-
-//     } catch (error) {
-//         console.error('Error while twitter auth:', error.response?.data || error);
-//         res.status(500).send({ message: 'Error while twitter auth', error: error.response?.data || error });
-//     }
-// };
-
-
 const updateUserDetails = async (req, res) => {
     try {
         const user = req.user;
-        // console.log("User : ", user.points)
+        // console.log("User : ", req.user.referralId)
         const userId = user._id.toString();
         const {
             // testNet data
@@ -263,6 +221,7 @@ const updateUserDetails = async (req, res) => {
         if (Object.keys(mainnetUpdates).length > 0) {
             await Main_Net.updateOne({ user_id: userId }, { $set: mainnetUpdates });
 
+
             // const currentPoints = parseInt(user.points);
             // const newPoint = currentPoints + 10;
             const currentPoints = parseInt(user.points);
@@ -270,6 +229,21 @@ const updateUserDetails = async (req, res) => {
 
             if (mainnetUpdates.bridge !== undefined && mainnetUpdates.bridge !== "") {
                 pointsToAdd = 10; // award 10 points for bridge
+
+                // ==>> find who reffer me to add 1 point
+                const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
+                // console.log("Who_refer_me : ", whorefferdMe);
+                const currentPointsWhoRefferdMe = parseInt(whorefferdMe.points);
+                let pointToAddWhoRefferdMe = 1;
+                let finalPoint = currentPointsWhoRefferdMe + pointToAddWhoRefferdMe;
+
+                // ```` (refferal_bridge_complition_points area) `````
+                const currentPointsOfBridgeCompletion = parseInt(whorefferdMe.refferal_bridge_complition_points);
+                let pointToAddInBridgeCompletion = 1;
+                let finalPointOfBridgeCompletion = currentPointsOfBridgeCompletion + pointToAddInBridgeCompletion;
+                const updatePointsWhoRefferdMe = await User.findOneAndUpdate({ _id: whorefferdMe._id }, { points: finalPoint.toString(), refferal_bridge_complition_points: finalPointOfBridgeCompletion });
+                // ==>> find who reffer me area ends
+
             }
 
             const newPoint = currentPoints + pointsToAdd;
@@ -330,7 +304,40 @@ const topFiftyPointUsers = async (req, res) => {
 // refferals calculation
 const referalCalculations = async (req, res) => {
     try {
-        // const totalrefferals = await
+        const loggedInUser = req.user;
+        // console.log(loggedInUser);
+        const totalRefferals = await User.aggregate([
+            { $match: { referralId: loggedInUser.invide_code } },
+            { $count: "total_refer_No" }
+        ]);
+
+        // who has completed mainNet
+        const completedMainNetRefferals = await User.aggregate([
+            { $match: { referralId: loggedInUser.invide_code } },
+            {
+                $lookup: {
+                    from: "main_nets",
+                    localField: "_id",
+                    foreignField: "user_id",
+                    as: "mainnetData"
+                }
+            },
+            { $unwind: { path: "$mainnetData", preserveNullAndEmptyArrays: true } },
+            { $match: { "mainnetData.RegisterKaanchDomain": { $ne: null } } },
+            { $count: "complted_refer_no" }
+        ]);
+        const count = completedMainNetRefferals[0]?.complted_refer_no || 0;
+        // const bridgeCompletionPoints = await
+        return res.status(200).send({
+            data: {
+                status: true, message: "Calculated data fetched successfully.",
+                result: {
+                    total_refer_No: totalRefferals[0].total_refer_No,
+                    complted_refer_no: count,
+                    per_refer_point: parseInt(req.user.refferal_bridge_complition_points)
+                }
+            }
+        });
     } catch (error) {
         console.log(error);
         return res.status(500).send({ message: "Server error while calculating referal points.", error });
@@ -343,4 +350,5 @@ module.exports = {
     updateUserDetails,
     twitterAuth,
     topFiftyPointUsers,
+    referalCalculations,
 }
