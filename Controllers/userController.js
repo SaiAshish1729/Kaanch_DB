@@ -439,6 +439,13 @@ const topFiftyPointUsers = async (req, res) => {
 const referalCalculations = async (req, res) => {
     try {
         const loggedInUser = req.user;
+        const { address } = req.query;
+        if (!address) {
+            return res.status(400).send({ data: { status: false, message: "Address is missing." } })
+        }
+        if (address !== req.user.address) {
+            return res.status(403).send({ data: { message: "Provided address is not matched with the token." } })
+        }
         // console.log(loggedInUser);
         const totalRefferals = await User.aggregate([
             { $match: { referralId: loggedInUser.invide_code } },
