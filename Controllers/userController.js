@@ -159,6 +159,7 @@ const updateUserDetails = async (req, res) => {
         const testNetData = await Test_Net.findOne({ user_id: userId });
         // console.log("testNet : ", testNetData);
         const mainNetData = await Main_Net.findOne({ user_id: userId });
+
         if (!testNetData || !mainNetData) {
             return res.status(404).send({ data: { message: "User's testnet or mainnet data not found" } });
         }
@@ -195,53 +196,123 @@ const updateUserDetails = async (req, res) => {
         // Step 3
         const testnetUpdates = {};
         const mainnetUpdates = {};
+        const alreadyUpdatedFields = [];
         // check pre used twitter_id
         if (twitterUID) {
-
             const preUsed = await Test_Net.findOne({ "twitterId.twitterUID": twitterUID });
             if (preUsed) {
                 return res.status(403).send({ data: { message: "This twitter_id has already used." } })
             }
         }
-        // const preUsed = await Test_Net.findOne({ "twitterId.twitterUID": twitterUID });
-        // if (preUsed) {
-        //     return res.status(403).send({ message: "This twitter_id has already used." })
-        // }
 
         if (twitterUID || displayName || photoURL) {
-            testnetUpdates["twitterId"] = {
-                twitterUID: twitterUID ?? testNetData.twitterId.twitterUID,
-                displayName: displayName ?? testNetData.twitterId.displayName,
-                photoURL: photoURL ?? testNetData.twitterId.photoURL
-            };
+            // testnetUpdates["twitterId"] = {
+            //     twitterUID: twitterUID ?? testNetData.twitterId.twitterUID,
+            //     displayName: displayName ?? testNetData.twitterId.displayName,
+            //     photoURL: photoURL ?? testNetData.twitterId.photoURL
+            // };
+
+            const currentTwitter = testNetData.twitterId || {};
+            console.log(currentTwitter)
+            if (!currentTwitter.twitterUID && twitterUID) {
+                testnetUpdates["twitterId"] = {
+                    twitterUID,
+                    displayName: displayName ?? currentTwitter.displayName,
+                    photoURL: photoURL ?? currentTwitter.photoURL,
+                };
+            } else {
+                alreadyUpdatedFields.push("twitterUID");
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+            }
         }
 
-        if (followKnchOnX !== undefined) testnetUpdates.followKnchOnX = followKnchOnX;
-        if (Dispathch_Wallet !== undefined) testnetUpdates.Dispathch_Wallet = Dispathch_Wallet;
-        if (Join_Group !== undefined) testnetUpdates.Join_Group = Join_Group;
-        if (testnet_faucet_claim !== undefined) testnetUpdates.testnet_faucet_claim = testnet_faucet_claim;
+        if (followKnchOnX !== undefined) {
+            if (!testNetData.followKnchOnX) {
+                testnetUpdates.followKnchOnX = followKnchOnX;
+            } else {
+                alreadyUpdatedFields.push("followKnchOnX");
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+            }
+        }
+        if (Dispathch_Wallet !== undefined) {
+            if (!testNetData.Dispathch_Wallet) {
+                testnetUpdates.Dispathch_Wallet = Dispathch_Wallet;
+            } else {
+                alreadyUpdatedFields.push("Dispathch_Wallet");
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+            }
+        }
+        if (Join_Group !== undefined) {
+            if (!testNetData.Join_Group) {
+                testnetUpdates.Join_Group = Join_Group;
+            } else {
+                alreadyUpdatedFields.push("Join_Group");
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+            }
+        }
+        if (testnet_faucet_claim !== undefined) {
+            if (!testNetData.testnet_faucet_claim) {
+                testnetUpdates.testnet_faucet_claim = testnet_faucet_claim;
+            } else {
+                alreadyUpdatedFields.push("testnet_faucet_claim");
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+            }
+        }
+        if (GenerateMainnetAccessCode !== undefined) {
+            if (!testNetData.GenerateMainnetAccessCode) {
+                testnetUpdates.GenerateMainnetAccessCode = GenerateMainnetAccessCode;
+            } else {
+                alreadyUpdatedFields.push("GenerateMainnetAccessCode");
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+            }
+        }
+
         // if (hashes !== undefined) testnetUpdates.hashes = hashes;
         if (hashes !== undefined) {
             if (!Array.isArray(hashes)) {
                 return res.status(400).send({ data: { message: "`hashes` must be an array." } });
             }
-            testnetUpdates.hashes = hashes;
 
-            // If you want to merge instead of replacing:
-            // testnetUpdates.hashes = [...new Set([...testNetData.hashes, ...hashes])];
+            const existingHashes = Array.isArray(testNetData.hashes) ? testNetData.hashes : [];
+            testnetUpdates.hashes = [...new Set([...existingHashes, ...hashes])];
         }
+
 
         if (GenerateMainnetAccessCode !== undefined) testnetUpdates.GenerateMainnetAccessCode = GenerateMainnetAccessCode;
 
-        if (bridge !== undefined) mainnetUpdates.bridge = bridge;
-        if (mainnet_faucet_claim !== undefined) mainnetUpdates.mainnet_faucet_claim = mainnet_faucet_claim;
-        if (RegisterKaanchDomain !== undefined) mainnetUpdates.RegisterKaanchDomain = RegisterKaanchDomain;
+        // if (bridge !== undefined) mainnetUpdates.bridge = bridge;
+        if (bridge !== undefined) {
+            if (!Array.isArray(bridge)) {
+                return res.status(400).send({ message: "`bridge` must be an array." });
+            }
+            const existingBridge = Array.isArray(mainNetData.bridge) ? mainNetData.bridge : [];
+            mainnetUpdates.bridge = [...new Set([...existingBridge, ...bridge])];
+
+        }
+
+
+        if (mainnet_faucet_claim !== undefined) {
+            if (!mainNetData.mainnet_faucet_claim) {
+                mainnetUpdates.mainnet_faucet_claim = mainnet_faucet_claim;
+            } else {
+                alreadyUpdatedFields.push("mainnet_faucet_claim");
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
+            }
+        }
+        if (RegisterKaanchDomain !== undefined) {
+            if (!mainNetData.RegisterKaanchDomain) {
+                mainnetUpdates.RegisterKaanchDomain = RegisterKaanchDomain;
+            } else {
+                alreadyUpdatedFields.push("RegisterKaanchDomain");
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
+            }
+        }
 
         // Step 4
-        // console.log(testnetUpdates)
+        console.log(testnetUpdates)
         // console.log(mainnetUpdates);
+
         if (Object.keys(testnetUpdates).length > 0) {
-            // console.log(testnetUpdates)
             await Test_Net.updateOne({ user_id: userId }, { $set: testnetUpdates });
             if (GenerateMainnetAccessCode) {
                 const currentPoints = parseInt(user.points);

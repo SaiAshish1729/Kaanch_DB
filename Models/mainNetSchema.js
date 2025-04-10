@@ -6,9 +6,13 @@ const mainNetSchema = new mongoose.Schema({
         ref: "User",
         required: true,
     },
+    // bridge: {
+    //     type: String,
+    //     default: null
+    // },
     bridge: {
-        type: String,
-        default: null
+        type: [String],
+        default: []
     },
     mainnet_faucet_claim: {
         type: Boolean,
