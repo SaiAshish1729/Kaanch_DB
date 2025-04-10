@@ -29,11 +29,6 @@ const testNetSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },  // Balance check faucet claim testnet
-
-    // hashes: {
-    //     type: String,
-    //     default: null
-    // },
     hashes: {
         type: [String],
         default: []

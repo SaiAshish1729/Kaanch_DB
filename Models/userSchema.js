@@ -22,7 +22,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "0"
     },
-
+    refferal_mainnet_completed_points: {
+        type: String,
+        default: "0"
+    }
 });
 
 const User = new mongoose.model("User", userSchema);

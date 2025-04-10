@@ -39,8 +39,7 @@ const Authentication = async (req, res, next) => {
         },
         { $unwind: { path: "$mainnetData", preserveNullAndEmptyArrays: true } },
     ]);
-
-    if (!rootUser) {
+    if (rootUser.length === 0) {
         return res.status(404).send({ data: { message: "User not found with this token.", status: false } })
     }
 

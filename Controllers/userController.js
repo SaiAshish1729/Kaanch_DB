@@ -29,6 +29,7 @@ const refferedUser = async (req, res) => {
                     return res.status(400).json({ data: { status: false, message: "Referral ID missing" } });
                 }
                 let referralUser = await User.findOne({ invide_code: referralId });
+                // console.log(referralId)
                 if (!referralUser) {
                     return res.status(404).json({ data: { status: false, message: "Invalid referral code" } });
                 }
@@ -137,7 +138,7 @@ const TWITTER_OAUTH_CLIENT_SECRET = '9EUyAcfJG_GytwXVLRMcm24N_1Bh8A24deQoUJ_e_qr
 const updateUserDetails = async (req, res) => {
     try {
         const user = req.user;
-        // console.log("User : ", req.user);
+        // console.log("logged_in_user : ", req.user);
         if (user === undefined) {
             return res.status(404).send({ data: { status: false, message: "User not found with provided token." } })
         }
@@ -280,8 +281,9 @@ const updateUserDetails = async (req, res) => {
                 return res.status(400).send({ message: "`bridge` must be an array." });
             }
             const existingBridge = Array.isArray(mainNetData.bridge) ? mainNetData.bridge : [];
-            mainnetUpdates.bridge = [...new Set([...existingBridge, ...bridge])];
-
+            // console.log("existingBridge : ", existingBridge)
+            let newBridge = mainnetUpdates.bridge = [...new Set([...existingBridge, ...bridge])];
+            // console.log("new_bridge : ", newBridge)
         }
 
 
@@ -323,31 +325,42 @@ const updateUserDetails = async (req, res) => {
 
         if (Object.keys(mainnetUpdates).length > 0) {
             await Main_Net.updateOne({ user_id: userId }, { $set: mainnetUpdates });
+            // console.log("curVal : ", user.mainnetData.bridge.length);
 
-
-            // const currentPoints = parseInt(user.points);
-            // const newPoint = currentPoints + 10;
             const currentPoints = parseInt(user.points);
-            let pointsToAdd = 1; // default point
+            let pointsToAdd = 0; // default point
 
             if (mainnetUpdates.bridge !== undefined && mainnetUpdates.bridge !== "") {
-                pointsToAdd = 10; // award 10 points for bridge
 
-                // ==>> find who reffer me to add 1 point
-                const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
-                // console.log("Who_refer_me : ", whorefferdMe);
-                const currentPointsWhoRefferdMe = parseInt(whorefferdMe.points);
-                let pointToAddWhoRefferdMe = 1;
-                let finalPoint = currentPointsWhoRefferdMe + pointToAddWhoRefferdMe;
+                if (user.mainnetData.bridge.length < 1) {
+                    pointsToAdd = 10;
 
-                // ```` (refferal_bridge_complition_points area) `````
-                const currentPointsOfBridgeCompletion = parseInt(whorefferdMe.refferal_bridge_complition_points);
-                let pointToAddInBridgeCompletion = 1;
-                let finalPointOfBridgeCompletion = currentPointsOfBridgeCompletion + pointToAddInBridgeCompletion;
-                const updatePointsWhoRefferdMe = await User.findOneAndUpdate({ _id: whorefferdMe._id }, { points: finalPoint.toString(), refferal_bridge_complition_points: finalPointOfBridgeCompletion });
-                // ==>> find who reffer me area ends
+                    // ==>> find who reffer me to add 1 point
+                    const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
+                    // console.log("Who_refer_me : ", whorefferdMe);
+                    const currentPointsWhoRefferdMe = parseInt(whorefferdMe.points);
+                    let pointToAddWhoRefferdMe = 1;
+                    let finalPoint = currentPointsWhoRefferdMe + pointToAddWhoRefferdMe;
+
+                    // ```` (refferal_bridge_complition_points area --due to I have added a special key in DB) `````
+                    const currentPointsOfBridgeCompletion = parseInt(whorefferdMe.refferal_bridge_complition_points);
+                    let pointToAddInBridgeCompletion = 1;
+                    let finalPointOfBridgeCompletion = currentPointsOfBridgeCompletion + pointToAddInBridgeCompletion;
+                    const updatePointsWhoRefferdMe = await User.findOneAndUpdate({ _id: whorefferdMe._id }, { points: finalPoint.toString(), refferal_bridge_complition_points: finalPointOfBridgeCompletion });
+                    // ==>> find who reffer me area ends
+                }
 
 
+            }
+
+            // === Mainnet Faucet Claim Logic ===
+            if (mainnetUpdates.mainnet_faucet_claim && !user.mainnetData.mainnet_faucet_claim) {
+                pointsToAdd += 1; // or whatever amount you want
+            }
+
+            // === Register Domain Logic ===
+            if (mainnetUpdates.RegisterKaanchDomain && !user.mainnetData.RegisterKaanchDomain) {
+                pointsToAdd += 1; // or whatever amount you want
             }
 
             const newPoint = currentPoints + pointsToAdd;
@@ -418,7 +431,6 @@ const referalCalculations = async (req, res) => {
             { $match: { referralId: loggedInUser.invide_code } },
             { $count: "total_refer_No" }
         ]);
-
         // who has completed mainNet
         const completedMainNetRefferals = await User.aggregate([
             { $match: { referralId: loggedInUser.invide_code } },
@@ -440,7 +452,7 @@ const referalCalculations = async (req, res) => {
             data: {
                 status: true, message: "Calculated data fetched successfully.",
                 result: {
-                    total_refer_No: totalRefferals[0].total_refer_No,
+                    total_refer_No: totalRefferals[0]?.total_refer_No || 0,
                     complted_refer_no: count,
                     per_refer_point: parseInt(req.user.refferal_bridge_complition_points)
                 }
