@@ -83,7 +83,7 @@ const userDetails = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        return res.status(500).send({ message: "Server error while fetching user details.", error });
+        return res.status(500).send({ data: { message: "Server error while fetching user details.", error } });
     }
 }
 
@@ -303,7 +303,7 @@ const updateUserDetails = async (req, res) => {
         }
 
         // Step 4
-        console.log(testnetUpdates)
+        // console.log(testnetUpdates)
         // console.log(mainnetUpdates);
 
         if (Object.keys(testnetUpdates).length > 0) {
@@ -367,7 +367,7 @@ const updateUserDetails = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        return res.status(500).send({ message: "Server error while updating user details.", error });
+        return res.status(500).send({ data: { message: "Server error while updating user details.", error } });
     }
 }
 
@@ -405,11 +405,7 @@ const topFiftyPointUsers = async (req, res) => {
 
     } catch (error) {
         console.error("Error fetching top users:", error);
-        return res.status(500).send({
-            success: false,
-            message: "Server error while fetching top users.",
-            error
-        });
+        return res.status(500).send({ data: { status: false, message: "Server error while fetching top users.", error } });
     }
 };
 
@@ -452,7 +448,7 @@ const referalCalculations = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        return res.status(500).send({ message: "Server error while calculating referal points.", error });
+        return res.status(500).send({ data: { message: "Server error while calculating referal points.", error } });
     }
 }
 
