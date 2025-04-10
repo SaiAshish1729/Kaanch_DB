@@ -206,14 +206,8 @@ const updateUserDetails = async (req, res) => {
         }
 
         if (twitterUID || displayName || photoURL) {
-            // testnetUpdates["twitterId"] = {
-            //     twitterUID: twitterUID ?? testNetData.twitterId.twitterUID,
-            //     displayName: displayName ?? testNetData.twitterId.displayName,
-            //     photoURL: photoURL ?? testNetData.twitterId.photoURL
-            // };
-
             const currentTwitter = testNetData.twitterId || {};
-            console.log(currentTwitter)
+            // console.log(currentTwitter) 
             if (!currentTwitter.twitterUID && twitterUID) {
                 testnetUpdates["twitterId"] = {
                     twitterUID,
