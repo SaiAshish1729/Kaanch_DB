@@ -7,7 +7,9 @@ const Connection = async () => {
 
 
     try {
-        await mongoose.connect(URL, { useNewUrlParser: true })
+        await mongoose.connect(URL,
+            // { useNewUrlParser: true }
+        )
         console.log("Database Connected Successfully!");
     } catch (error) {
         console.log("Error whine Connection", error)
