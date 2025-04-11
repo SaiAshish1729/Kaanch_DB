@@ -444,7 +444,7 @@ const referalCalculations = async (req, res) => {
             return res.status(400).send({ data: { status: false, message: "Address is missing." } })
         }
         if (address !== req.user.address) {
-            return res.status(403).send({ data: { message: "Provided address is not matched with the token." } })
+            return res.status(403).send({ data: { message: "Provided address is not matched with the token." } });
         }
         // console.log(loggedInUser);
         const totalRefferals = await User.aggregate([

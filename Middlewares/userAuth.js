@@ -51,6 +51,8 @@ const Authentication = async (req, res, next) => {
         address: objData?.address,
         invide_code: objData?.invide_code,
         points: objData?.points,
+        refferal_bridge_complition_points: objData?.refferal_bridge_complition_points,
+        refferal_mainnet_completed_points: objData?.refferal_mainnet_completed_points,
         twitterId: objData?.testnetData.twitterId,
         followKnchOnX: objData?.testnetData.followKnchOnX,
         Dispathch_Wallet: objData?.testnetData.Dispathch_Wallet,
