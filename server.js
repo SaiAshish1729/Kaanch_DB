@@ -4,7 +4,8 @@ const express = require("express");
 const cors = require("cors");
 const Connection = require("./DB/Connection.js");
 const app = express();
-const userRoute = require("./Routes/userRoutes.js")
+const userRoute = require("./Routes/userRoutes.js");
+// const seedAdmin = require('./Seeders/adminSeeder.js');
 
 // dotenv.config();
 const port = process.env.APP_PORT || 5000;
@@ -15,6 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // DB Connection
 Connection();
+// seedAdmin()
 //Routes
 app.use("/", userRoute);
 
