@@ -397,6 +397,11 @@ const topFiftyPointUsers = async (req, res) => {
     try {
         const topUsers = await User.aggregate([
             {
+                $match: {
+                    address: { $ne: process.env.ADMIN_ADDRESS } // Exclude address "Admin"
+                }
+            },
+            {
                 $addFields: {
                     pointsAsNumber: { $toInt: "$points" }
                 }
@@ -419,9 +424,11 @@ const topFiftyPointUsers = async (req, res) => {
         ]);
 
         return res.status(200).send({
-            success: true,
-            message: "Top 50 users fetched successfully.",
-            data: topUsers
+            data: {
+                status: true,
+                message: "Top 50 users fetched successfully.",
+                data: topUsers
+            }
         });
 
     } catch (error) {
