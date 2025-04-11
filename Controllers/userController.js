@@ -427,7 +427,7 @@ const topFiftyPointUsers = async (req, res) => {
             data: {
                 status: true,
                 message: "Top 50 users fetched successfully.",
-                data: topUsers
+                result: topUsers
             }
         });
 
