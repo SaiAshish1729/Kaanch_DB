@@ -5,6 +5,10 @@ const generateJWTtoken = (address) => {
     return jwt.sign({ address }, process.env.JWT_SECRET);
 };
 
+const generateCode = () => {
+    return Math.random().toString(36).substring(2, 7).toUpperCase();
+};
+
 // const TWITTER_OAUTH_CLIENT_ID = "bnJDc0o1cXlWY0hVbDZ1bVpVUzY6MTpjaQ";
 // const twitterOauthTokenParams = {
 //     client_id: TWITTER_OAUTH_CLIENT_ID,
@@ -42,5 +46,7 @@ const twitterOauthTokenParams = {
 module.exports = {
     generateJWTtoken,
     twitterOauthTokenParams,
-    BasicAuthToken
+    BasicAuthToken,
+    generateCode,
+
 }

@@ -1,5 +1,5 @@
 const User = require("../Models/userSchema");
-const { generateJWTtoken, twitterOauthTokenParams, BasicAuthToken } = require("../utility");
+const { generateJWTtoken, twitterOauthTokenParams, BasicAuthToken, generateCode } = require("../utility");
 const ethers = require("ethers")
 const axios = require("axios");
 const { default: mongoose } = require("mongoose");
@@ -500,9 +500,6 @@ const generateInviteCodeForMyAccount = async (req, res) => {
         if (loggedInUser.invide_code) {
             return res.status(403).send({ data: { message: "You already have a invite code." } })
         }
-        const generateCode = () => {
-            return Math.random().toString(36).substring(2, 7).toUpperCase();
-        };
 
         const code = generateCode();
         const savedCode = await User.updateOne({ _id: loggedInUser._id }, { $set: { invide_code: code } });
