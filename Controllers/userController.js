@@ -484,6 +484,39 @@ const referalCalculations = async (req, res) => {
     }
 }
 
+// invite_code generator
+const generateInviteCodeForMyAccount = async (req, res) => {
+    try {
+        const { invide_code } = req.body;
+        const loggedInUser = req.user;
+        const { address } = req.query;
+        if (!address) {
+            return res.status(400).send({ data: { status: false, message: "Address is missing." } })
+        }
+        if (address !== req.user.address) {
+            return res.status(403).send({ data: { message: "Provided address is not matched with the token." } });
+        }
+
+        if (loggedInUser.invide_code) {
+            return res.status(403).send({ data: { message: "You already have a invite code." } })
+        }
+        const generateCode = () => {
+            return Math.random().toString(36).substring(2, 7).toUpperCase();
+        };
+
+        const code = generateCode();
+        const savedCode = await User.updateOne({ _id: loggedInUser._id }, { $set: { invide_code: code } });
+
+        return res.status(200).send({
+            data: {
+                status: true, message: "Invite code saved successfully.",
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({ data: { message: "Server error while generating invite code.", error } });
+    }
+}
 module.exports = {
     refferedUser,
     userDetails,
@@ -491,4 +524,6 @@ module.exports = {
     twitterAuth,
     topFiftyPointUsers,
     referalCalculations,
+    generateInviteCodeForMyAccount,
+
 }
