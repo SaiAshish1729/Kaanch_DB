@@ -361,18 +361,19 @@ const updateUserDetails = async (req, res) => {
             // === Register Kaanch Domain Logic ===
             if (mainnetUpdates.RegisterKaanchDomain && !user.mainnetData.RegisterKaanchDomain) {
                 pointsToAdd += 1;
-                // ==>> find who reffer me to add 1 point
-                const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
-                // console.log("Who_refer_me : ", whorefferdMe);
-                const currentPointsWhoRefferdMe = parseInt(whorefferdMe.points);
-                let pointToAddWhoRefferdMe = 1;
-                let finalPoint = currentPointsWhoRefferdMe + pointToAddWhoRefferdMe;
 
-                // ````` ( point add to refferal_mainnet_completed_points colmn also ) ````````
-                const current_refferal_mainnet_completed_points = parseInt(whorefferdMe.refferal_mainnet_completed_points);
-                let pointToAddIn_refferal_mainnet_completed_points = 1;
-                let finalPointOf_mainnet_Completion = current_refferal_mainnet_completed_points + pointToAddIn_refferal_mainnet_completed_points;
-                const updatePointsWhoRefferdMe = await User.findOneAndUpdate({ _id: whorefferdMe._id }, { points: finalPoint.toString(), refferal_mainnet_completed_points: finalPointOf_mainnet_Completion });
+                // // ==>> find who reffer me to add 1 point
+                // const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
+                // // console.log("Who_refer_me : ", whorefferdMe);
+                // const currentPointsWhoRefferdMe = parseInt(whorefferdMe.points);
+                // let pointToAddWhoRefferdMe = 1;
+                // let finalPoint = currentPointsWhoRefferdMe + pointToAddWhoRefferdMe;
+
+                // // ````` ( point add to refferal_mainnet_completed_points colmn also ) ````````
+                // const current_refferal_mainnet_completed_points = parseInt(whorefferdMe.refferal_mainnet_completed_points);
+                // let pointToAddIn_refferal_mainnet_completed_points = 1;
+                // let finalPointOf_mainnet_Completion = current_refferal_mainnet_completed_points + pointToAddIn_refferal_mainnet_completed_points;
+                // const updatePointsWhoRefferdMe = await User.findOneAndUpdate({ _id: whorefferdMe._id }, { points: finalPoint.toString(), refferal_mainnet_completed_points: finalPointOf_mainnet_Completion });
 
             }
 

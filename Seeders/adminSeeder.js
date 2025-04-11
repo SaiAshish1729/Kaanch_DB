@@ -22,5 +22,6 @@ const seedAdmin = async () => {
         process.exit(1);
     }
 }
+
 seedAdmin();
 module.exports = seedAdmin
