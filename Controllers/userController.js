@@ -89,13 +89,11 @@ const userDetails = async (req, res) => {
 }
 
 // twitter auth
-// twitter auth
-// twitter auth
 const twitterAuth = async (req, res) => {
     try {
         const { code } = req.query;
-        console.log("Code : ", code);
-        console.log("twitterOauthTokenParams", twitterOauthTokenParams)
+        // console.log("Code : ", code);
+        // console.log("twitterOauthTokenParams", twitterOauthTokenParams)
 
         const responseType = await axios.post(
             process.env.TWITTER_OAUTH_TOKEN_URL,
@@ -119,7 +117,7 @@ const twitterAuth = async (req, res) => {
 
         });
         const data2 = await res2.json();
-        console.log("data2", data2);
+        // console.log("data2", data2);
         res.status(200).send({
             data: data2,
             status: true
@@ -129,11 +127,7 @@ const twitterAuth = async (req, res) => {
         res.status(500).send({ message: 'Error while twitter auth', error });
     }
 }
-const TWITTER_OAUTH_TOKEN_URL = "https://api.x.com/2/oauth2/token"
-const TWITTER_OAUTH_CLIENT_ID = "8KxxO-RPl0bLSxX5AWwgdiFbMnry_VOKzFeIlVA7NoA" //
-const TWITTER_REDIRECT_URI = "https://airdrop.kaanch.com/"
-const TWITTER_CODE_VERIFIER = "8KxxO-RPl0bLSxX5AWwgdiFbMnry_VOKzFeIlVA7NoA"
-const TWITTER_OAUTH_CLIENT_SECRET = '9EUyAcfJG_GytwXVLRMcm24N_1Bh8A24deQoUJ_e_qrA4FBwOH'; //
+
 
 const updateUserDetails = async (req, res) => {
     try {
