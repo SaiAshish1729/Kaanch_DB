@@ -259,7 +259,7 @@ const updateUserDetails = async (req, res) => {
         // if (hashes !== undefined) testnetUpdates.hashes = hashes;
         if (hashes !== undefined) {
             if (!Array.isArray(hashes)) {
-                return res.status(400).send({ data: { message: "`hashes` must be an array." } });
+                return res.status(400).send({ data: { status: false, message: "`hashes` must be an array." } });
             }
 
             const existingHashes = Array.isArray(testNetData.hashes) ? testNetData.hashes : [];
@@ -272,7 +272,7 @@ const updateUserDetails = async (req, res) => {
         // if (bridge !== undefined) mainnetUpdates.bridge = bridge;
         if (bridge !== undefined) {
             if (!Array.isArray(bridge)) {
-                return res.status(400).send({ message: "`bridge` must be an array." });
+                return res.status(400).send({ status: false, message: "`bridge` must be an array." });
             }
             const existingBridge = Array.isArray(mainNetData.bridge) ? mainNetData.bridge : [];
             // console.log("existingBridge : ", existingBridge)
