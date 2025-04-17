@@ -141,7 +141,7 @@ const updateUserDetails = async (req, res) => {
             return res.status(403).send({ data: { status: false, message: "Address is missing." } })
         }
         if (address !== req.user.address) {
-            return res.status(403).send({ data: { message: "Provided address is not matched with the token." } })
+            return res.status(403).send({ data: { status: false, message: "Provided address is not matched with the token." } })
         }
         const userId = user._id.toString();
         const {
@@ -156,36 +156,36 @@ const updateUserDetails = async (req, res) => {
         const mainNetData = await Main_Net.findOne({ user_id: userId });
 
         if (!testNetData || !mainNetData) {
-            return res.status(404).send({ data: { message: "User's testnet or mainnet data not found" } });
+            return res.status(404).send({ data: { status: false, message: "User's testnet or mainnet data not found" } });
         }
 
         if (followKnchOnX && testNetData.twitterId.twitterUID === null) {
-            return res.status(400).send({ data: { message: "Please connect X before following us." } });
+            return res.status(400).send({ data: { status: false, message: "Please connect X before following us." } });
         }
 
         if (Dispathch_Wallet && !testNetData.followKnchOnX) {
-            return res.status(400).send({ data: { message: "Please follow on followKnchOnX before updating Dispatch Wallet." } });
+            return res.status(400).send({ data: { status: false, message: "Please follow on followKnchOnX before updating Dispatch Wallet." } });
         }
 
         if (Join_Group && !testNetData.Dispathch_Wallet) {
-            return res.status(400).send({ data: { message: "Please complete Dispatch Wallet before joining group." } });
+            return res.status(400).send({ data: { status: false, message: "Please complete Dispatch Wallet before joining group." } });
         }
 
         if (testnet_faucet_claim && !testNetData.Join_Group) {
-            return res.status(400).send({ data: { message: "Join the group before claiming testnet faucet." } });
+            return res.status(400).send({ data: { status: false, message: "Join the group before claiming testnet faucet." } });
         }
 
         if (GenerateMainnetAccessCode && !testNetData.testnet_faucet_claim) {
-            return res.status(400).send({ data: { message: "Claim the testnet faucet before generating mainnet access code." } });
+            return res.status(400).send({ data: { status: false, message: "Claim the testnet faucet before generating mainnet access code." } });
         }
 
         // mainNet checkinngs ...
         if (mainnet_faucet_claim && !mainNetData.bridge) {
-            return res.status(400).send({ data: { message: "Bridge is required before claiming mainnet faucet." } });
+            return res.status(400).send({ data: { status: false, message: "Bridge is required before claiming mainnet faucet." } });
         }
 
         if (RegisterKaanchDomain && !mainNetData.mainnet_faucet_claim) {
-            return res.status(400).send({ data: { message: "Claim mainnet faucet before registering domain." } });
+            return res.status(400).send({ data: { status: false, message: "Claim mainnet faucet before registering domain." } });
         }
 
         // Step 3
@@ -196,7 +196,7 @@ const updateUserDetails = async (req, res) => {
         if (twitterUID) {
             const preUsed = await Test_Net.findOne({ "twitterId.twitterUID": twitterUID });
             if (preUsed) {
-                return res.status(403).send({ data: { message: "This twitter_id has already used." } })
+                return res.status(403).send({ data: { status: false, message: "This twitter_id has already used." } })
             }
         }
 
