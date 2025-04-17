@@ -388,7 +388,7 @@ const updateUserDetails = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        return res.status(500).send({ data: { message: "Server error while updating user details.", error } });
+        return res.status(500).send({ data: { status: false, message: "Server error while updating user details.", error } });
     }
 }
 
