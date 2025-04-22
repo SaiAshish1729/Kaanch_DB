@@ -64,7 +64,7 @@ const refferedUser = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        return res.status(500).send({ message: "Error occured while sign in by referal_Id.", error });
+        return res.status(500).send({ status: false, message: "Error occured while sign in by referal_Id.", error });
     }
 }
 
@@ -73,18 +73,18 @@ const userDetails = async (req, res) => {
     try {
         const { address } = req.query;
         if (!address) {
-            return res.status(400).send({ data: { message: "Address is missing." } });
+            return res.status(400).send({ data: { status: false, message: "Address is missing." } });
         } else {
             const user = req.customizedUser;
             if (user.address !== address) {
-                return res.status(403).send({ data: { message: "This address is not authentic with the provided token." } });
+                return res.status(403).send({ data: { status: false, message: "This address is not authentic with the provided token." } });
             }
             return res.status(200).send({ data: { status: true, message: "User details fetched successfully.", result: user } });
         }
 
     } catch (error) {
         console.log(error);
-        return res.status(500).send({ data: { message: "Server error while fetching user details.", error } });
+        return res.status(500).send({ data: { status: false, message: "Server error while fetching user details.", error } });
     }
 }
 
@@ -383,6 +383,7 @@ const updateUserDetails = async (req, res) => {
 
         return res.status(200).send({
             data: {
+                status: false,
                 message: "No info provided.",
             }
         });
@@ -446,7 +447,7 @@ const referalCalculations = async (req, res) => {
             return res.status(400).send({ data: { status: false, message: "Address is missing." } })
         }
         if (address !== req.user.address) {
-            return res.status(403).send({ data: { message: "Provided address is not matched with the token." } });
+            return res.status(403).send({ data: { status: false, message: "Provided address is not matched with the token." } });
         }
 
         let totalRefferals = [];
@@ -505,11 +506,11 @@ const generateInviteCodeForMyAccount = async (req, res) => {
             return res.status(400).send({ data: { status: false, message: "Address is missing." } })
         }
         if (address !== req.user.address) {
-            return res.status(403).send({ data: { message: "Provided address is not matched with the token." } });
+            return res.status(403).send({ data: { status: false, message: "Provided address is not matched with the token." } });
         }
 
         if (loggedInUser.invide_code) {
-            return res.status(403).send({ data: { message: "You already have a invite code." } })
+            return res.status(403).send({ data: { status: false, message: "You already have a invite code." } })
         }
 
         const code = generateCode();
@@ -517,12 +518,13 @@ const generateInviteCodeForMyAccount = async (req, res) => {
 
         return res.status(200).send({
             data: {
-                status: true, message: "Invite code saved successfully.",
+                status: true,
+                message: "Invite code saved successfully.",
             }
         });
     } catch (error) {
         console.log(error);
-        return res.status(500).send({ data: { message: "Server error while generating invite code.", error } });
+        return res.status(500).send({ data: { status: false, message: "Server error while generating invite code.", error } });
     }
 }
 module.exports = {
