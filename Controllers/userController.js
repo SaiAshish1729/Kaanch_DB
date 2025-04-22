@@ -448,11 +448,20 @@ const referalCalculations = async (req, res) => {
         if (address !== req.user.address) {
             return res.status(403).send({ data: { message: "Provided address is not matched with the token." } });
         }
-        // console.log(loggedInUser);
-        const totalRefferals = await User.aggregate([
-            { $match: { referralId: loggedInUser.invide_code } },
-            { $count: "total_refer_No" }
-        ]);
+
+        let totalRefferals = [];
+        if (loggedInUser.invide_code !== null) {
+            totalRefferals = await User.aggregate([
+                { $match: { referralId: loggedInUser.invide_code } },
+                { $count: "total_refer_No" }
+            ]);
+        }
+
+        // const totalRefferals = await User.aggregate([
+        //     { $match: { referralId: loggedInUser.invide_code } },
+        //     { $count: "total_refer_No" }
+        // ]);
+
         // who has completed mainNet
         const completedMainNetRefferals = await User.aggregate([
             { $match: { referralId: loggedInUser.invide_code } },
