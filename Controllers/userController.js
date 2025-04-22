@@ -491,7 +491,7 @@ const referalCalculations = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        return res.status(500).send({ data: { message: "Server error while calculating referal points.", error } });
+        return res.status(500).send({ data: { status: false, message: "Server error while calculating referal points.", error } });
     }
 }
 
