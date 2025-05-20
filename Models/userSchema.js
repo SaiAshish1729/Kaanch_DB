@@ -8,7 +8,8 @@ const userSchema = new mongoose.Schema({
         type: String
     },
     address: {
-        type: String
+        type: String,
+        unique: true,
     },
     invide_code: {
         type: String,
