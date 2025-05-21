@@ -5,7 +5,9 @@ const Connection = async () => {
     // const URL = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.iicjf2c.mongodb.net/Kaanch-DB`
 
     try {
-        await mongoose.connect(process.env.URL,
+        await mongoose.connect(
+            // URL
+            process.env.URL,
             // { useNewUrlParser: true }
         )
         console.log("Database Connected Successfully!");
