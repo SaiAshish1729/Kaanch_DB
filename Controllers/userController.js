@@ -129,30 +129,294 @@ const twitterAuth = async (req, res) => {
 }
 
 
+// const updateUserDetails = async (req, res) => {
+//     try {
+//         const user = req.user;
+//         // console.log("logged_in_user : ", req.user);
+//         if (user === undefined) {
+//             return res.status(404).send({ data: { status: false, message: "User not found with provided token." } })
+//         }
+//         const { address } = req.query;
+//         if (!address) {
+//             return res.status(403).send({ data: { status: false, message: "Address is missing." } })
+//         }
+//         if (address !== req.user.address) {
+//             return res.status(403).send({ data: { status: false, message: "Provided address is not matched with the token." } })
+//         }
+//         const userId = user._id.toString();
+//         const {
+//             // testNet data
+//             twitterUID, displayName, photoURL,
+//             followKnchOnX, Dispathch_Wallet, Join_Group, testnet_faucet_claim, hashes, GenerateMainnetAccessCode,
+//             // mainNet data
+//             bridge, mainnet_faucet_claim, RegisterKaanchDomain } = req.body;
+
+//         const testNetData = await Test_Net.findOne({ user_id: userId });
+//         // console.log("testNet : ", testNetData);
+//         const mainNetData = await Main_Net.findOne({ user_id: userId });
+
+//         if (!testNetData || !mainNetData) {
+//             return res.status(404).send({ data: { status: false, message: "User's testnet or mainnet data not found" } });
+//         }
+
+//         if (followKnchOnX && testNetData.twitterId.twitterUID === null) {
+//             return res.status(400).send({ data: { status: false, message: "Please connect X before following us." } });
+//         }
+
+//         if (Dispathch_Wallet && !testNetData.followKnchOnX) {
+//             return res.status(400).send({ data: { status: false, message: "Please follow on followKnchOnX before updating Dispatch Wallet." } });
+//         }
+
+//         if (Join_Group && !testNetData.Dispathch_Wallet) {
+//             return res.status(400).send({ data: { status: false, message: "Please complete Dispatch Wallet before joining group." } });
+//         }
+
+//         if (testnet_faucet_claim && !testNetData.Join_Group) {
+//             return res.status(400).send({ data: { status: false, message: "Join the group before claiming testnet faucet." } });
+//         }
+
+//         if (GenerateMainnetAccessCode && !testNetData.testnet_faucet_claim) {
+//             return res.status(400).send({ data: { status: false, message: "Claim the testnet faucet before generating mainnet access code." } });
+//         }
+
+//         // mainNet checkinngs ...
+//         if (mainnet_faucet_claim && !mainNetData.bridge) {
+//             return res.status(400).send({ data: { status: false, message: "Bridge is required before claiming mainnet faucet." } });
+//         }
+
+//         if (RegisterKaanchDomain && !mainNetData.mainnet_faucet_claim) {
+//             return res.status(400).send({ data: { status: false, message: "Claim mainnet faucet before registering domain." } });
+//         }
+
+//         // Step 3
+//         const testnetUpdates = {};
+//         const mainnetUpdates = {};
+//         const alreadyUpdatedFields = [];
+//         // check pre used twitter_id
+//         if (twitterUID) {
+//             const preUsed = await Test_Net.findOne({ "twitterId.twitterUID": twitterUID });
+//             if (preUsed) {
+//                 return res.status(403).send({ data: { status: false, message: "This twitter_id has already used." } })
+//             }
+//         }
+
+//         if (twitterUID || displayName || photoURL) {
+//             const currentTwitter = testNetData.twitterId || {};
+//             // console.log(currentTwitter) 
+//             if (!currentTwitter.twitterUID && twitterUID) {
+//                 testnetUpdates["twitterId"] = {
+//                     twitterUID,
+//                     displayName: displayName ?? currentTwitter.displayName,
+//                     photoURL: photoURL ?? currentTwitter.photoURL,
+//                 };
+//             } else {
+//                 alreadyUpdatedFields.push("twitterUID");
+//                 return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+//             }
+//         }
+
+//         if (followKnchOnX !== undefined) {
+//             if (!testNetData.followKnchOnX) {
+//                 testnetUpdates.followKnchOnX = followKnchOnX;
+//             } else {
+//                 alreadyUpdatedFields.push("followKnchOnX");
+//                 return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+//             }
+//         }
+//         if (Dispathch_Wallet !== undefined) {
+//             if (!testNetData.Dispathch_Wallet) {
+//                 testnetUpdates.Dispathch_Wallet = Dispathch_Wallet;
+//             } else {
+//                 alreadyUpdatedFields.push("Dispathch_Wallet");
+//                 return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+//             }
+//         }
+//         if (Join_Group !== undefined) {
+//             if (!testNetData.Join_Group) {
+//                 testnetUpdates.Join_Group = Join_Group;
+//             } else {
+//                 alreadyUpdatedFields.push("Join_Group");
+//                 return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+//             }
+//         }
+//         if (testnet_faucet_claim !== undefined) {
+//             if (!testNetData.testnet_faucet_claim) {
+//                 testnetUpdates.testnet_faucet_claim = testnet_faucet_claim;
+//             } else {
+//                 alreadyUpdatedFields.push("testnet_faucet_claim");
+//                 return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+//             }
+//         }
+//         if (GenerateMainnetAccessCode !== undefined) {
+//             if (!testNetData.GenerateMainnetAccessCode) {
+//                 testnetUpdates.GenerateMainnetAccessCode = GenerateMainnetAccessCode;
+//             } else {
+//                 alreadyUpdatedFields.push("GenerateMainnetAccessCode");
+//                 return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+//             }
+//         }
+
+//         // if (hashes !== undefined) testnetUpdates.hashes = hashes;
+//         if (hashes !== undefined) {
+//             if (!Array.isArray(hashes)) {
+//                 return res.status(400).send({ data: { status: false, message: "`hashes` must be an array." } });
+//             }
+
+//             const existingHashes = Array.isArray(testNetData.hashes) ? testNetData.hashes : [];
+//             testnetUpdates.hashes = [...new Set([...existingHashes, ...hashes])];
+//         }
+
+
+//         if (GenerateMainnetAccessCode !== undefined) testnetUpdates.GenerateMainnetAccessCode = GenerateMainnetAccessCode;
+
+//         // if (bridge !== undefined) mainnetUpdates.bridge = bridge;
+//         if (bridge !== undefined) {
+//             if (!Array.isArray(bridge)) {
+//                 return res.status(400).send({ status: false, message: "`bridge` must be an array." });
+//             }
+//             const existingBridge = Array.isArray(mainNetData.bridge) ? mainNetData.bridge : [];
+//             // console.log("existingBridge : ", existingBridge)
+//             let newBridge = mainnetUpdates.bridge = [...new Set([...existingBridge, ...bridge])];
+//             // console.log("new_bridge : ", newBridge)
+//         }
+
+
+//         if (mainnet_faucet_claim !== undefined) {
+//             if (!mainNetData.mainnet_faucet_claim) {
+//                 mainnetUpdates.mainnet_faucet_claim = mainnet_faucet_claim;
+//             } else {
+//                 alreadyUpdatedFields.push("mainnet_faucet_claim");
+//                 return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
+//             }
+//         }
+//         if (RegisterKaanchDomain !== undefined) {
+//             if (!mainNetData.RegisterKaanchDomain) {
+//                 mainnetUpdates.RegisterKaanchDomain = RegisterKaanchDomain;
+//             } else {
+//                 alreadyUpdatedFields.push("RegisterKaanchDomain");
+//                 return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
+//             }
+//         }
+
+//         // Step 4
+//         // console.log(testnetUpdates)
+//         // console.log(mainnetUpdates);
+
+//         if (Object.keys(testnetUpdates).length > 0) {
+//             await Test_Net.updateOne({ user_id: userId }, { $set: testnetUpdates });
+//             if (GenerateMainnetAccessCode) {
+//                 const currentPoints = parseInt(user.points);
+//                 const newPoint = currentPoints + 100;
+//                 await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() })
+//             }
+//             return res.status(200).send({
+//                 data: {
+//                     status: true, message: "User details updated successfully.",
+//                     // data: req.user
+//                 }
+//             });
+//         }
+
+//         if (Object.keys(mainnetUpdates).length > 0) {
+//             await Main_Net.updateOne({ user_id: userId }, { $set: mainnetUpdates });
+//             // console.log("curVal : ", user.mainnetData.bridge.length);
+
+//             const currentPoints = parseInt(user.points);
+//             let pointsToAdd = 0; // default point
+
+//             if (mainnetUpdates.bridge !== undefined && mainnetUpdates.bridge !== "") {
+
+//                 if (user.mainnetData.bridge.length < 1) {
+//                     pointsToAdd = 10;
+
+//                     // ==>> find who reffer me to add 1 point
+//                     const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
+//                     // console.log("Who_refer_me : ", whorefferdMe);
+//                     const currentPointsWhoRefferdMe = parseInt(whorefferdMe.points);
+//                     let pointToAddWhoRefferdMe = 1;
+//                     let finalPoint = currentPointsWhoRefferdMe + pointToAddWhoRefferdMe;
+
+//                     // ```` (refferal_bridge_complition_points area --due to I have added a special key in DB) `````
+//                     const currentPointsOfBridgeCompletion = parseInt(whorefferdMe.refferal_bridge_complition_points);
+//                     let pointToAddInBridgeCompletion = 1;
+//                     let finalPointOfBridgeCompletion = currentPointsOfBridgeCompletion + pointToAddInBridgeCompletion;
+//                     const updatePointsWhoRefferdMe = await User.findOneAndUpdate({ _id: whorefferdMe._id }, { points: finalPoint.toString(), refferal_bridge_complition_points: finalPointOfBridgeCompletion });
+//                     // ==>> find who reffer me area ends
+//                 }
+
+//             }
+
+//             // === Mainnet Faucet Claim Logic ===
+//             if (mainnetUpdates.mainnet_faucet_claim && !user.mainnetData.mainnet_faucet_claim) {
+//                 pointsToAdd += 1;
+//             }
+
+//             // === Register Kaanch Domain Logic ===
+//             if (mainnetUpdates.RegisterKaanchDomain && !user.mainnetData.RegisterKaanchDomain) {
+//                 pointsToAdd += 1;
+
+//                 // // ==>> find who reffer me to add 1 point
+//                 // const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
+//                 // // console.log("Who_refer_me : ", whorefferdMe);
+//                 // const currentPointsWhoRefferdMe = parseInt(whorefferdMe.points);
+//                 // let pointToAddWhoRefferdMe = 1;
+//                 // let finalPoint = currentPointsWhoRefferdMe + pointToAddWhoRefferdMe;
+
+//                 // // ````` ( point add to refferal_mainnet_completed_points colmn also ) ````````
+//                 // const current_refferal_mainnet_completed_points = parseInt(whorefferdMe.refferal_mainnet_completed_points);
+//                 // let pointToAddIn_refferal_mainnet_completed_points = 1;
+//                 // let finalPointOf_mainnet_Completion = current_refferal_mainnet_completed_points + pointToAddIn_refferal_mainnet_completed_points;
+//                 // const updatePointsWhoRefferdMe = await User.findOneAndUpdate({ _id: whorefferdMe._id }, { points: finalPoint.toString(), refferal_mainnet_completed_points: finalPointOf_mainnet_Completion });
+
+//             }
+
+//             const newPoint = currentPoints + pointsToAdd;
+//             await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() })
+//             return res.status(200).send({
+//                 data: {
+//                     status: true, message: "User details updated successfully.",
+//                     // data: req.user
+//                 }
+//             });
+//         }
+
+//         return res.status(200).send({
+//             data: {
+//                 status: false,
+//                 message: "No info provided.",
+//             }
+//         });
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(500).send({ data: { status: false, message: "Server error while updating user details.", error } });
+//     }
+// }
+
+// ===>>
 const updateUserDetails = async (req, res) => {
     try {
         const user = req.user;
-        // console.log("logged_in_user : ", req.user);
         if (user === undefined) {
-            return res.status(404).send({ data: { status: false, message: "User not found with provided token." } })
+            return res.status(404).send({ data: { status: false, message: "User not found with provided token." } });
         }
+
         const { address } = req.query;
         if (!address) {
-            return res.status(403).send({ data: { status: false, message: "Address is missing." } })
+            return res.status(403).send({ data: { status: false, message: "Address is missing." } });
         }
+
         if (address !== req.user.address) {
-            return res.status(403).send({ data: { status: false, message: "Provided address is not matched with the token." } })
+            return res.status(403).send({ data: { status: false, message: "Provided address is not matched with the token." } });
         }
+
         const userId = user._id.toString();
         const {
-            // testNet data
             twitterUID, displayName, photoURL,
-            followKnchOnX, Dispathch_Wallet, Join_Group, testnet_faucet_claim, hashes, GenerateMainnetAccessCode,
-            // mainNet data
-            bridge, mainnet_faucet_claim, RegisterKaanchDomain } = req.body;
+            followKnchOnX, Dispathch_Wallet, Join_Group, testnet_faucet_claim, hashes,
+            bridge, mainnet_faucet_claim, RegisterKaanchDomain
+        } = req.body;
 
         const testNetData = await Test_Net.findOne({ user_id: userId });
-        // console.log("testNet : ", testNetData);
         const mainNetData = await Main_Net.findOne({ user_id: userId });
 
         if (!testNetData || !mainNetData) {
@@ -175,11 +439,6 @@ const updateUserDetails = async (req, res) => {
             return res.status(400).send({ data: { status: false, message: "Join the group before claiming testnet faucet." } });
         }
 
-        if (GenerateMainnetAccessCode && !testNetData.testnet_faucet_claim) {
-            return res.status(400).send({ data: { status: false, message: "Claim the testnet faucet before generating mainnet access code." } });
-        }
-
-        // mainNet checkinngs ...
         if (mainnet_faucet_claim && !mainNetData.bridge) {
             return res.status(400).send({ data: { status: false, message: "Bridge is required before claiming mainnet faucet." } });
         }
@@ -188,21 +447,19 @@ const updateUserDetails = async (req, res) => {
             return res.status(400).send({ data: { status: false, message: "Claim mainnet faucet before registering domain." } });
         }
 
-        // Step 3
         const testnetUpdates = {};
         const mainnetUpdates = {};
         const alreadyUpdatedFields = [];
-        // check pre used twitter_id
+
         if (twitterUID) {
             const preUsed = await Test_Net.findOne({ "twitterId.twitterUID": twitterUID });
             if (preUsed) {
-                return res.status(403).send({ data: { status: false, message: "This twitter_id has already used." } })
+                return res.status(403).send({ data: { status: false, message: "This twitter_id has already used." } });
             }
         }
 
         if (twitterUID || displayName || photoURL) {
             const currentTwitter = testNetData.twitterId || {};
-            // console.log(currentTwitter) 
             if (!currentTwitter.twitterUID && twitterUID) {
                 testnetUpdates["twitterId"] = {
                     twitterUID,
@@ -211,7 +468,7 @@ const updateUserDetails = async (req, res) => {
                 };
             } else {
                 alreadyUpdatedFields.push("twitterUID");
-                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
             }
         }
 
@@ -220,66 +477,61 @@ const updateUserDetails = async (req, res) => {
                 testnetUpdates.followKnchOnX = followKnchOnX;
             } else {
                 alreadyUpdatedFields.push("followKnchOnX");
-                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
             }
         }
+
         if (Dispathch_Wallet !== undefined) {
             if (!testNetData.Dispathch_Wallet) {
                 testnetUpdates.Dispathch_Wallet = Dispathch_Wallet;
             } else {
                 alreadyUpdatedFields.push("Dispathch_Wallet");
-                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
             }
         }
+
         if (Join_Group !== undefined) {
             if (!testNetData.Join_Group) {
                 testnetUpdates.Join_Group = Join_Group;
             } else {
                 alreadyUpdatedFields.push("Join_Group");
-                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
             }
         }
+
         if (testnet_faucet_claim !== undefined) {
             if (!testNetData.testnet_faucet_claim) {
                 testnetUpdates.testnet_faucet_claim = testnet_faucet_claim;
             } else {
                 alreadyUpdatedFields.push("testnet_faucet_claim");
-                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
-            }
-        }
-        if (GenerateMainnetAccessCode !== undefined) {
-            if (!testNetData.GenerateMainnetAccessCode) {
-                testnetUpdates.GenerateMainnetAccessCode = GenerateMainnetAccessCode;
-            } else {
-                alreadyUpdatedFields.push("GenerateMainnetAccessCode");
-                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } })
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
             }
         }
 
-        // if (hashes !== undefined) testnetUpdates.hashes = hashes;
+        let addHashPoints = false;
+
         if (hashes !== undefined) {
             if (!Array.isArray(hashes)) {
                 return res.status(400).send({ data: { status: false, message: "`hashes` must be an array." } });
             }
 
             const existingHashes = Array.isArray(testNetData.hashes) ? testNetData.hashes : [];
-            testnetUpdates.hashes = [...new Set([...existingHashes, ...hashes])];
+            const mergedHashes = [...new Set([...existingHashes, ...hashes])];
+
+            if (existingHashes.length === 0 && hashes.length > 0) {
+                addHashPoints = true; // Only first time
+            }
+
+            testnetUpdates.hashes = mergedHashes;
         }
 
-
-        if (GenerateMainnetAccessCode !== undefined) testnetUpdates.GenerateMainnetAccessCode = GenerateMainnetAccessCode;
-
-        // if (bridge !== undefined) mainnetUpdates.bridge = bridge;
         if (bridge !== undefined) {
             if (!Array.isArray(bridge)) {
                 return res.status(400).send({ status: false, message: "`bridge` must be an array." });
             }
             const existingBridge = Array.isArray(mainNetData.bridge) ? mainNetData.bridge : [];
-            // console.log("existingBridge : ", existingBridge)
-            let newBridge = mainnetUpdates.bridge = [...new Set([...existingBridge, ...bridge])];
-            // console.log("new_bridge : ", newBridge)
+            mainnetUpdates.bridge = [...new Set([...existingBridge, ...bridge])];
         }
-
 
         if (mainnet_faucet_claim !== undefined) {
             if (!mainNetData.mainnet_faucet_claim) {
@@ -289,6 +541,7 @@ const updateUserDetails = async (req, res) => {
                 return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
             }
         }
+
         if (RegisterKaanchDomain !== undefined) {
             if (!mainNetData.RegisterKaanchDomain) {
                 mainnetUpdates.RegisterKaanchDomain = RegisterKaanchDomain;
@@ -298,85 +551,63 @@ const updateUserDetails = async (req, res) => {
             }
         }
 
-        // Step 4
-        // console.log(testnetUpdates)
-        // console.log(mainnetUpdates);
-
         if (Object.keys(testnetUpdates).length > 0) {
             await Test_Net.updateOne({ user_id: userId }, { $set: testnetUpdates });
-            if (GenerateMainnetAccessCode) {
+
+            if (addHashPoints) {
                 const currentPoints = parseInt(user.points);
                 const newPoint = currentPoints + 100;
-                await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() })
+                await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() });
             }
+
             return res.status(200).send({
                 data: {
-                    status: true, message: "User details updated successfully.",
-                    // data: req.user
+                    status: true,
+                    message: "User details updated successfully.",
                 }
             });
         }
 
         if (Object.keys(mainnetUpdates).length > 0) {
             await Main_Net.updateOne({ user_id: userId }, { $set: mainnetUpdates });
-            // console.log("curVal : ", user.mainnetData.bridge.length);
 
             const currentPoints = parseInt(user.points);
-            let pointsToAdd = 0; // default point
+            let pointsToAdd = 0;
 
             if (mainnetUpdates.bridge !== undefined && mainnetUpdates.bridge !== "") {
-
                 if (user.mainnetData.bridge.length < 1) {
                     pointsToAdd = 10;
 
-                    // ==>> find who reffer me to add 1 point
                     const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
-                    // console.log("Who_refer_me : ", whorefferdMe);
-                    const currentPointsWhoRefferdMe = parseInt(whorefferdMe.points);
-                    let pointToAddWhoRefferdMe = 1;
-                    let finalPoint = currentPointsWhoRefferdMe + pointToAddWhoRefferdMe;
-
-                    // ```` (refferal_bridge_complition_points area --due to I have added a special key in DB) `````
-                    const currentPointsOfBridgeCompletion = parseInt(whorefferdMe.refferal_bridge_complition_points);
-                    let pointToAddInBridgeCompletion = 1;
-                    let finalPointOfBridgeCompletion = currentPointsOfBridgeCompletion + pointToAddInBridgeCompletion;
-                    const updatePointsWhoRefferdMe = await User.findOneAndUpdate({ _id: whorefferdMe._id }, { points: finalPoint.toString(), refferal_bridge_complition_points: finalPointOfBridgeCompletion });
-                    // ==>> find who reffer me area ends
+                    if (whorefferdMe) {
+                        const currentPointsWhoRefferdMe = parseInt(whorefferdMe.points);
+                        const bridgePoints = parseInt(whorefferdMe.refferal_bridge_complition_points);
+                        await User.findOneAndUpdate(
+                            { _id: whorefferdMe._id },
+                            {
+                                points: (currentPointsWhoRefferdMe + 1).toString(),
+                                refferal_bridge_complition_points: bridgePoints + 1,
+                            }
+                        );
+                    }
                 }
-
-
             }
 
-            // === Mainnet Faucet Claim Logic ===
             if (mainnetUpdates.mainnet_faucet_claim && !user.mainnetData.mainnet_faucet_claim) {
                 pointsToAdd += 1;
             }
 
-            // === Register Kaanch Domain Logic ===
             if (mainnetUpdates.RegisterKaanchDomain && !user.mainnetData.RegisterKaanchDomain) {
                 pointsToAdd += 1;
-
-                // // ==>> find who reffer me to add 1 point
-                // const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
-                // // console.log("Who_refer_me : ", whorefferdMe);
-                // const currentPointsWhoRefferdMe = parseInt(whorefferdMe.points);
-                // let pointToAddWhoRefferdMe = 1;
-                // let finalPoint = currentPointsWhoRefferdMe + pointToAddWhoRefferdMe;
-
-                // // ````` ( point add to refferal_mainnet_completed_points colmn also ) ````````
-                // const current_refferal_mainnet_completed_points = parseInt(whorefferdMe.refferal_mainnet_completed_points);
-                // let pointToAddIn_refferal_mainnet_completed_points = 1;
-                // let finalPointOf_mainnet_Completion = current_refferal_mainnet_completed_points + pointToAddIn_refferal_mainnet_completed_points;
-                // const updatePointsWhoRefferdMe = await User.findOneAndUpdate({ _id: whorefferdMe._id }, { points: finalPoint.toString(), refferal_mainnet_completed_points: finalPointOf_mainnet_Completion });
-
             }
 
             const newPoint = currentPoints + pointsToAdd;
-            await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() })
+            await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() });
+
             return res.status(200).send({
                 data: {
-                    status: true, message: "User details updated successfully.",
-                    // data: req.user
+                    status: true,
+                    message: "User details updated successfully.",
                 }
             });
         }
@@ -391,7 +622,9 @@ const updateUserDetails = async (req, res) => {
         console.log(error);
         return res.status(500).send({ data: { status: false, message: "Server error while updating user details.", error } });
     }
-}
+};
+
+
 
 // top 50 highest point users
 const topFiftyPointUsers = async (req, res) => {
@@ -527,6 +760,7 @@ const generateInviteCodeForMyAccount = async (req, res) => {
         return res.status(500).send({ data: { status: false, message: "Server error while generating invite code.", error } });
     }
 }
+
 module.exports = {
     refferedUser,
     userDetails,
