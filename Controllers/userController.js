@@ -413,7 +413,10 @@ const updateUserDetails = async (req, res) => {
         const {
             twitterUID, displayName, photoURL,
             followKnchOnX, Dispathch_Wallet, Join_Group, testnet_faucet_claim, hashes,
-            bridge, mainnet_faucet_claim, RegisterKaanchDomain
+            // mainNet_Schema
+            bridge,
+            //  mainnet_faucet_claim, RegisterKaanchDomain
+            buy_kaanch_now, check_holding
         } = req.body;
 
         const testNetData = await Test_Net.findOne({ user_id: userId });
@@ -438,13 +441,13 @@ const updateUserDetails = async (req, res) => {
         if (testnet_faucet_claim && !testNetData.Join_Group) {
             return res.status(400).send({ data: { status: false, message: "Join the group before claiming testnet faucet." } });
         }
-
-        if (mainnet_faucet_claim && !mainNetData.bridge) {
-            return res.status(400).send({ data: { status: false, message: "Bridge is required before claiming mainnet faucet." } });
+        // changes here 
+        if (buy_kaanch_now && !mainNetData.bridge) {
+            return res.status(400).send({ data: { status: false, message: "Bridge is required before buying kaanch." } });
         }
 
-        if (RegisterKaanchDomain && !mainNetData.mainnet_faucet_claim) {
-            return res.status(400).send({ data: { status: false, message: "Claim mainnet faucet before registering domain." } });
+        if (check_holding && !mainNetData.buy_kaanch_now) {
+            return res.status(400).send({ data: { status: false, message: "Buy kaanch before check holding." } });
         }
 
         const testnetUpdates = {};
@@ -533,23 +536,25 @@ const updateUserDetails = async (req, res) => {
             mainnetUpdates.bridge = [...new Set([...existingBridge, ...bridge])];
         }
 
-        if (mainnet_faucet_claim !== undefined) {
-            if (!mainNetData.mainnet_faucet_claim) {
-                mainnetUpdates.mainnet_faucet_claim = mainnet_faucet_claim;
+        if (buy_kaanch_now !== undefined) {
+            if (!mainNetData.buy_kaanch_now) {
+                mainnetUpdates.buy_kaanch_now = buy_kaanch_now;
             } else {
-                alreadyUpdatedFields.push("mainnet_faucet_claim");
+                alreadyUpdatedFields.push("buy_kaanch_now");
                 return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
             }
         }
 
-        if (RegisterKaanchDomain !== undefined) {
-            if (!mainNetData.RegisterKaanchDomain) {
-                mainnetUpdates.RegisterKaanchDomain = RegisterKaanchDomain;
-            } else {
-                alreadyUpdatedFields.push("RegisterKaanchDomain");
-                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
+        if (check_holding !== undefined) {
+            if (!Array.isArray(check_holding)) {
+                return res.status(400).send({ data: { status: false, message: "`check_holding` must be an array of objects." } });
             }
+
+            const existingHoldings = Array.isArray(mainNetData.check_holding) ? mainNetData.check_holding : [];
+            const mergedHoldings = [...existingHoldings, ...check_holding];
+            mainnetUpdates.check_holding = mergedHoldings;
         }
+
 
         if (Object.keys(testnetUpdates).length > 0) {
             await Test_Net.updateOne({ user_id: userId }, { $set: testnetUpdates });
@@ -593,13 +598,21 @@ const updateUserDetails = async (req, res) => {
                 }
             }
 
-            if (mainnetUpdates.mainnet_faucet_claim && !user.mainnetData.mainnet_faucet_claim) {
+            // if (mainnetUpdates.mainnet_faucet_claim && !user.mainnetData.mainnet_faucet_claim) {
+            //     pointsToAdd += 1;
+            // }
+
+            // if (mainnetUpdates.RegisterKaanchDomain && !user.mainnetData.RegisterKaanchDomain) {
+            //     pointsToAdd += 1;
+            // }
+
+            if (mainnetUpdates.buy_kaanch_now && !user.mainnetData.buy_kaanch_now) {
+                pointsToAdd += 1;
+            }
+            if (mainnetUpdates.check_holding && mainnetUpdates.check_holding.length > 0) {
                 pointsToAdd += 1;
             }
 
-            if (mainnetUpdates.RegisterKaanchDomain && !user.mainnetData.RegisterKaanchDomain) {
-                pointsToAdd += 1;
-            }
 
             const newPoint = currentPoints + pointsToAdd;
             await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() });

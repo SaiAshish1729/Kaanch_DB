@@ -10,14 +10,24 @@ const mainNetSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
-    mainnet_faucet_claim: {
+    // mainnet_faucet_claim: {
+    //     type: Boolean,
+    //     default: false
+    // },
+    // RegisterKaanchDomain: {
+    //     type: String,
+    //     default: null
+    // },
+
+    buy_kaanch_now: {
         type: Boolean,
+        required: true,
         default: false
     },
-    RegisterKaanchDomain: {
-        type: String,
-        default: null
-    },
+    check_holding: {
+        type: [Object],
+        default: []
+    }
 
 });
 
