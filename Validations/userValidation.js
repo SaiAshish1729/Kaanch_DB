@@ -23,11 +23,13 @@ const updateUserValidation = Joi.object({
     GenerateMainnetAccessCode: Joi.string().required().label("GenerateMainnetAccessCode"),
     enterMainnetAccessCode: Joi.string().required().label("enterMainnetAccessCode"),
     bridge: Joi.string().required().label("bridge"),
+    bridge_point: Joi.number().required().label("bridge_point"),
     mainnet_faucet_claim: Joi.string().required().label("mainnet_faucet_claim"),
     RegisterKaanchDomain: Joi.string().required().label("RegisterKaanchDomain"),
     invide_code: Joi.string().required().label("invide_code"),
     Referral_Number: Joi.string().required().label("Referral_Number"),
     points: Joi.string().required().label("points"),
+
 });
 
 module.exports = {

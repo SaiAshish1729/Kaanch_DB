@@ -16,14 +16,14 @@ const testNetSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    Dispathch_Wallet: {
+    Dispathch_Wallet: { // re-tweet
         type: Boolean,
         default: false
     },
     Join_Group: {
         type: Boolean,
         default: false
-    },
+    }, // stop serial
 
     testnet_faucet_claim: {
         type: Boolean,

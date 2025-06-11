@@ -5,6 +5,7 @@ const axios = require("axios");
 const { default: mongoose } = require("mongoose");
 const Test_Net = require("../Models/testNetSchema");
 const Main_Net = require("../Models/mainNetSchema");
+const Point_Calculation = require("../Models/pointCalculationSchema");
 
 const refferedUser = async (req, res) => {
     try {
@@ -49,7 +50,10 @@ const refferedUser = async (req, res) => {
                     user_id: newUser._id
                 });
                 await mainNet.save();
-
+                const pointCalculationRecord = new Point_Calculation({
+                    user_id: newUser._id
+                });
+                pointCalculationRecord.save();
                 res.status(201).json({
                     data: {
                         status: true, message: "User registered and sign in successfully.", token,
@@ -415,8 +419,8 @@ const updateUserDetails = async (req, res) => {
             followKnchOnX, Dispathch_Wallet, Join_Group, testnet_faucet_claim, hashes,
             // mainNet_Schema
             bridge,
-            //  mainnet_faucet_claim, RegisterKaanchDomain
-            buy_kaanch_now, check_holding
+            //  mainnet_faucet_claim,
+            RegisterKaanchDomain, buy_kaanch_now, check_holding
         } = req.body;
 
         const testNetData = await Test_Net.findOne({ user_id: userId });
@@ -440,14 +444,6 @@ const updateUserDetails = async (req, res) => {
 
         if (testnet_faucet_claim && !testNetData.Join_Group) {
             return res.status(400).send({ data: { status: false, message: "Join the group before claiming testnet faucet." } });
-        }
-        // changes here 
-        if (buy_kaanch_now && !mainNetData.bridge) {
-            return res.status(400).send({ data: { status: false, message: "Bridge is required before buying kaanch." } });
-        }
-
-        if (check_holding && !mainNetData.buy_kaanch_now) {
-            return res.status(400).send({ data: { status: false, message: "Buy kaanch before check holding." } });
         }
 
         const testnetUpdates = {};
@@ -478,15 +474,18 @@ const updateUserDetails = async (req, res) => {
         if (followKnchOnX !== undefined) {
             if (!testNetData.followKnchOnX) {
                 testnetUpdates.followKnchOnX = followKnchOnX;
+                // ==>> provide point (5 point) to this user
+                const twitterFollowPoint = await Point_Calculation.updateOne({ user_id: user._id }, { twitter_point: 5 });
             } else {
                 alreadyUpdatedFields.push("followKnchOnX");
                 return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
             }
         }
 
-        if (Dispathch_Wallet !== undefined) {
+        if (Dispathch_Wallet !== undefined) { // re-tweet
             if (!testNetData.Dispathch_Wallet) {
                 testnetUpdates.Dispathch_Wallet = Dispathch_Wallet;
+                const reTweetpoint = await Point_Calculation.updateOne({ user_id: user._id }, { retweet_point: 1 });
             } else {
                 alreadyUpdatedFields.push("Dispathch_Wallet");
                 return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
@@ -496,6 +495,7 @@ const updateUserDetails = async (req, res) => {
         if (Join_Group !== undefined) {
             if (!testNetData.Join_Group) {
                 testnetUpdates.Join_Group = Join_Group;
+                const joinGroupPoint = await Point_Calculation.updateOne({ user_id: user._id }, { join_group_point: 1 });
             } else {
                 alreadyUpdatedFields.push("Join_Group");
                 return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
@@ -534,6 +534,26 @@ const updateUserDetails = async (req, res) => {
             }
             const existingBridge = Array.isArray(mainNetData.bridge) ? mainNetData.bridge : [];
             mainnetUpdates.bridge = [...new Set([...existingBridge, ...bridge])];
+            // add point here
+            const { bridge_point } = req.body;
+            if (!bridge_point) {
+                return res.status(400).send({ status: false, message: "'bridge_point' is required along with bridge" })
+            }
+            const bridgePoint = await Point_Calculation.updateOne({ user_id: user._id }, { bridge_point });
+        }
+
+        if (RegisterKaanchDomain !== undefined) {
+            if (!mainNetData.RegisterKaanchDomain) {
+                mainnetUpdates.RegisterKaanchDomain = RegisterKaanchDomain;
+                const { RegisterKaanchDomain_point } = req.body;
+                if (!RegisterKaanchDomain_point) {
+                    return res.status(400).send({ status: false, message: "Please provide RegisterKaanchDomain_point along with 'RegisterKaanchDomain' field." })
+                }
+                const RegisterKaanchDomainPoint = await Point_Calculation.updateOne({ user_id: user._id }, { RegisterKaanchDomain_point });
+            } else {
+                alreadyUpdatedFields.push("RegisterKaanchDomain");
+                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
+            }
         }
 
         if (buy_kaanch_now !== undefined) {
@@ -553,6 +573,12 @@ const updateUserDetails = async (req, res) => {
             const existingHoldings = Array.isArray(mainNetData.check_holding) ? mainNetData.check_holding : [];
             const mergedHoldings = [...existingHoldings, ...check_holding];
             mainnetUpdates.check_holding = mergedHoldings;
+            // add point here 
+            const { check_holding_point } = req.body;
+            if (!check_holding_point) {
+                return res.status(400).send({ status: false, message: "'check_holding_point' is required along with check_holding" });
+            }
+            const checkHoldingPoint = await Point_Calculation.updateOne({ user_id: user._id }, { check_holding_point });
         }
 
 
@@ -581,6 +607,10 @@ const updateUserDetails = async (req, res) => {
 
             if (mainnetUpdates.bridge !== undefined && mainnetUpdates.bridge !== "") {
                 if (user.mainnetData.bridge.length < 1) {
+                    const { bridge_point } = req.body;
+                    if (!bridge_point) {
+                        return res.status(400).send({ status: false, message: "'bridge_point' is required along with bridge." })
+                    }
                     pointsToAdd = 10;
 
                     const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });

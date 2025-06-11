@@ -14,16 +14,16 @@ const mainNetSchema = new mongoose.Schema({
     //     type: Boolean,
     //     default: false
     // },
-    // RegisterKaanchDomain: {
-    //     type: String,
-    //     default: null
-    // },
-
-    buy_kaanch_now: {
-        type: Boolean,
-        required: true,
-        default: false
+    RegisterKaanchDomain: {
+        type: String,
+        default: null
     },
+
+    // buy_kaanch_now: {
+    //     type: Boolean,
+    //     required: true,
+    //     default: false
+    // },
     check_holding: {
         type: [Object],
         default: []
