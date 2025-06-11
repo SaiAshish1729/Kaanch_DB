@@ -31,6 +31,10 @@ const pointCalculationSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    referred_users_awarded: {
+        type: [mongoose.Schema.Types.ObjectId], // Store referred users who already triggered points
+        default: []
+    },
     per_refferal_point: {
         type: Number,
         default: 0

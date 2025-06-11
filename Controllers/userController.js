@@ -599,60 +599,87 @@ const updateUserDetails = async (req, res) => {
             });
         }
 
-        if (Object.keys(mainnetUpdates).length > 0) {
-            await Main_Net.updateOne({ user_id: userId }, { $set: mainnetUpdates });
+        // if (Object.keys(mainnetUpdates).length > 0) {
+        //     await Main_Net.updateOne({ user_id: userId }, { $set: mainnetUpdates });
 
-            const currentPoints = parseInt(user.points);
-            let pointsToAdd = 0;
+        //     const currentPoints = parseInt(user.points);
+        //     let pointsToAdd = 0;
 
-            if (mainnetUpdates.bridge !== undefined && mainnetUpdates.bridge !== "") {
-                if (user.mainnetData.bridge.length < 1) {
-                    const { bridge_point } = req.body;
-                    if (!bridge_point) {
-                        return res.status(400).send({ status: false, message: "'bridge_point' is required along with bridge." })
-                    }
-                    pointsToAdd = 10;
+        //     // mainNet bridge refferal_point (whoRefferMe)
+        //     if (mainnetUpdates.bridge !== undefined && mainnetUpdates.bridge !== "" && mainnetUpdates.check_holding !== undefined && mainnetUpdates.check_holding !== "") {
+        //         if (user.mainnetData.bridge.length < 1 && user.mainnetData.check_holding.length < 1) {
 
-                    const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
-                    if (whorefferdMe) {
-                        const currentPointsWhoRefferdMe = parseInt(whorefferdMe.points);
-                        const bridgePoints = parseInt(whorefferdMe.refferal_bridge_complition_points);
-                        await User.findOneAndUpdate(
-                            { _id: whorefferdMe._id },
-                            {
-                                points: (currentPointsWhoRefferdMe + 1).toString(),
-                                refferal_bridge_complition_points: bridgePoints + 1,
-                            }
-                        );
-                    }
-                }
+        //             pointsToAdd = 5;
+
+        //             const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
+
+        //             if (whorefferdMe) {
+        //                 if (!whorefferdMe.address === process.env.ADMIN_ADDRESS) {
+        //                     const currentPointsWhoRefferdMe = parseInt(whorefferdMe.points);
+        //                     const bridgePoints = parseInt(whorefferdMe.refferal_bridge_complition_points);
+        //                     await User.findOneAndUpdate(
+        //                         { _id: whorefferdMe._id },
+        //                         {
+        //                             points: (currentPointsWhoRefferdMe + 1).toString(),
+        //                             refferal_bridge_complition_points: bridgePoints + 1,
+        //                         }
+        //                     );
+        //                 }
+
+        //             }
+        //         }
+        //     }
+
+
+
+        //     // mainNet check_holding point (me and whoRefferMe both)
+        //     if (mainnetUpdates.check_holding !== undefined & mainnetUpdates.check_holding !== "") {
+        //         if (user.mainnetData.check_holding.length < 1) {
+        //             const { check_holding_point } = req.body;
+        //         }
+        //     }
+
+        //     // if (mainnetUpdates.mainnet_faucet_claim && !user.mainnetData.mainnet_faucet_claim) {
+        //     //     pointsToAdd += 1;
+        //     // }
+
+        //     // if (mainnetUpdates.RegisterKaanchDomain && !user.mainnetData.RegisterKaanchDomain) {
+        //     //     pointsToAdd += 1;
+        //     // }
+
+        //     if (mainnetUpdates.buy_kaanch_now && !user.mainnetData.buy_kaanch_now) {
+        //         pointsToAdd += 1;
+        //     }
+        //     if (mainnetUpdates.check_holding && mainnetUpdates.check_holding.length > 0) {
+        //         pointsToAdd += 1;
+        //     }
+
+
+        //     const newPoint = currentPoints + pointsToAdd;
+        //     await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() });
+
+        //     return res.status(200).send({
+        //         data: {
+        //             status: true,
+        //             message: "User details updated successfully.",
+        //         }
+        //     });
+        // }
+
+        const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
+
+        const isFirstBridge = mainnetUpdates.bridge && user.mainnetData.bridge.length === 0;
+        const isFirstHolding = mainnetUpdates.check_holding && user.mainnetData.check_holding.length === 0;
+
+        if ((isFirstBridge || isFirstHolding) && whorefferdMe && whorefferdMe.address !== process.env.ADMIN_ADDRESS) {
+            const pointDoc = await Point_Calculation.findOne({ user_id: whorefferdMe._id });
+
+            if (pointDoc && !pointDoc.referred_users_awarded.includes(user._id)) {
+                // Add 1 referral point and save the referred user id
+                pointDoc.per_refferal_point += 5;
+                pointDoc.referred_users_awarded.push(user._id);
+                await pointDoc.save();
             }
-
-            // if (mainnetUpdates.mainnet_faucet_claim && !user.mainnetData.mainnet_faucet_claim) {
-            //     pointsToAdd += 1;
-            // }
-
-            // if (mainnetUpdates.RegisterKaanchDomain && !user.mainnetData.RegisterKaanchDomain) {
-            //     pointsToAdd += 1;
-            // }
-
-            if (mainnetUpdates.buy_kaanch_now && !user.mainnetData.buy_kaanch_now) {
-                pointsToAdd += 1;
-            }
-            if (mainnetUpdates.check_holding && mainnetUpdates.check_holding.length > 0) {
-                pointsToAdd += 1;
-            }
-
-
-            const newPoint = currentPoints + pointsToAdd;
-            await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() });
-
-            return res.status(200).send({
-                data: {
-                    status: true,
-                    message: "User details updated successfully.",
-                }
-            });
         }
 
         return res.status(200).send({

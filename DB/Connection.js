@@ -6,8 +6,8 @@ const Connection = async () => {
 
     try {
         await mongoose.connect(
-            URL
-            // process.env.URL,
+            // URL
+            process.env.URL,
             // { useNewUrlParser: true }
         )
         console.log("Database Connected Successfully!");
