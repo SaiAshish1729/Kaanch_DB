@@ -53,7 +53,7 @@ const refferedUser = async (req, res) => {
                 const pointCalculationRecord = new Point_Calculation({
                     user_id: newUser._id
                 });
-                pointCalculationRecord.save();
+                await pointCalculationRecord.save();
                 res.status(201).json({
                     data: {
                         status: true, message: "User registered and sign in successfully.", token,
