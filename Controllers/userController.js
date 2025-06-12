@@ -632,6 +632,61 @@ const updateUserDetails = async (req, res) => {
             //     }
             // }
 
+            const hasBridgeBefore = user.mainnetData.bridge.length > 0;
+            // console.log("hasBridgeBefore:", hasBridgeBefore)
+
+            const hasHoldingBefore = user.mainnetData.check_holding.length > 0;
+            // console.log("hasHoldingBefore:", hasHoldingBefore)
+
+            const hasUpdatedBridgeNow = mainnetUpdates.bridge !== undefined && mainnetUpdates.bridge.length > 0;
+            // console.log("hasUpdatedBridgeNow:", hasUpdatedBridgeNow)
+
+            const hasUpdatedHoldingNow = mainnetUpdates.check_holding !== undefined && mainnetUpdates.check_holding.length > 0;
+            // console.log("hasUpdatedHoldingNow:", hasUpdatedHoldingNow)
+
+            // If this is the first time either bridge or check_holding is updated
+            if ((!hasBridgeBefore && hasUpdatedBridgeNow) || (!hasHoldingBefore && hasUpdatedHoldingNow)) {
+                // Find the referring user
+                const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
+                if (whorefferdMe && whorefferdMe.address !== process.env.ADMIN_ADDRESS) {
+                    // Check if the referred user's ID already exists in the referrer's awarded list
+                    const referrerPoints = await Point_Calculation.findOne({ user_id: whorefferdMe._id });
+                    const alreadyRewarded = referrerPoints?.referred_users_awarded?.includes(user._id.toString());
+
+                    if (!alreadyRewarded) {
+                        // ✅ Give 1 point to the referrer and record the referral
+                        await Point_Calculation.updateOne(
+                            { user_id: whorefferdMe._id },
+                            {
+                                $inc: {
+                                    per_refferal_point: 5
+                                },
+                                $push: {
+                                    referred_users_awarded: user._id
+                                }
+                            },
+                            { upsert: true }
+                        );
+
+                        // ✅ Update points and bridge completion count in User collection
+                        const currentPoints = parseInt(whorefferdMe.points);
+                        const bridgePoints = parseInt(whorefferdMe.refferal_bridge_complition_points);
+
+                        await User.updateOne(
+                            { _id: whorefferdMe._id },
+                            {
+                                $set: {
+                                    points: (currentPoints + 5).toString(),
+                                    refferal_bridge_complition_points: bridgePoints + 1
+                                }
+                            }
+                        );
+                    }
+                }
+            }
+
+
+
 
 
             // mainNet check_holding point (me and whoRefferMe both)
@@ -668,27 +723,7 @@ const updateUserDetails = async (req, res) => {
             });
         }
 
-        // =============================================================================================================================>>>>>
-        const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
-        console.log(whorefferdMe)
-        const isFirstBridge = mainnetUpdates.bridge && user.mainnetData.bridge.length === 0;
-        console.log("isFirstBridge :", isFirstBridge)
-        const isFirstHolding = mainnetUpdates.check_holding && user.mainnetData.check_holding.length === 0;
-        console.log("isFirstHolding :", isFirstHolding)
 
-        if ((isFirstBridge || isFirstHolding) && whorefferdMe && whorefferdMe.address !== process.env.ADMIN_ADDRESS) {
-            const pointDoc = await Point_Calculation.findOne({ user_id: whorefferdMe._id });
-            console.log("pointDoc:", pointDoc)
-
-            if (pointDoc && !pointDoc.referred_users_awarded.includes(user._id)) {
-                // Add 1 referral point and save the referred user id
-                pointDoc.per_refferal_point += 5;
-                pointDoc.referred_users_awarded.push(user._id);
-                console.log("pointDoc :", pointDoc)
-                await pointDoc.save();
-            }
-        }
-        // =========================================================================================================================>>>>>
 
         return res.status(200).send({
             data: {
@@ -753,6 +788,7 @@ const topFiftyPointUsers = async (req, res) => {
 const referalCalculations = async (req, res) => {
     try {
         const loggedInUser = req.user;
+        // console.log(loggedInUser.pointCalculation.referred_users_awarded.length)
         const { address } = req.query;
         if (!address) {
             return res.status(400).send({ data: { status: false, message: "Address is missing." } })
@@ -769,35 +805,13 @@ const referalCalculations = async (req, res) => {
             ]);
         }
 
-        // const totalRefferals = await User.aggregate([
-        //     { $match: { referralId: loggedInUser.invide_code } },
-        //     { $count: "total_refer_No" }
-        // ]);
-
-        // who has completed mainNet
-        const completedMainNetRefferals = await User.aggregate([
-            { $match: { referralId: loggedInUser.invide_code } },
-            {
-                $lookup: {
-                    from: "main_nets",
-                    localField: "_id",
-                    foreignField: "user_id",
-                    as: "mainnetData"
-                }
-            },
-            { $unwind: { path: "$mainnetData", preserveNullAndEmptyArrays: true } },
-            { $match: { "mainnetData.RegisterKaanchDomain": { $ne: null } } },
-            { $count: "complted_refer_no" }
-        ]);
-        const count = completedMainNetRefferals[0]?.complted_refer_no || 0;
-        // const bridgeCompletionPoints = await
         return res.status(200).send({
             data: {
                 status: true, message: "Calculated data fetched successfully.",
                 result: {
                     total_refer_No: totalRefferals[0]?.total_refer_No || 0,
-                    complted_refer_no: count,
-                    per_refer_point: parseInt(req.user.refferal_bridge_complition_points)
+                    complted_refer_no: loggedInUser.pointCalculation.referred_users_awarded.length,
+                    per_refer_point: loggedInUser.pointCalculation.per_refferal_point
                 }
             }
         });
