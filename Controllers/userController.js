@@ -544,19 +544,43 @@ const updateUserDetails = async (req, res) => {
             const bridgePoint = await Point_Calculation.updateOne({ user_id: user._id }, { bridge_point });
         }
 
+        // if (RegisterKaanchDomain !== undefined) {
+        //     if (!mainNetData.RegisterKaanchDomain) {
+        //         mainnetUpdates.RegisterKaanchDomain = RegisterKaanchDomain;
+        //         const { RegisterKaanchDomain_point } = req.body;
+        //         if (!RegisterKaanchDomain_point) {
+        //             return res.status(400).send({ status: false, message: "Please provide RegisterKaanchDomain_point along with 'RegisterKaanchDomain' field." })
+        //         }
+        //         const RegisterKaanchDomainPoint = await Point_Calculation.updateOne({ user_id: user._id }, { RegisterKaanchDomain_point });
+        //     } else {
+        //         alreadyUpdatedFields.push("RegisterKaanchDomain");
+        //         return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
+        //     }
+        // }
         if (RegisterKaanchDomain !== undefined) {
-            if (!mainNetData.RegisterKaanchDomain) {
-                mainnetUpdates.RegisterKaanchDomain = RegisterKaanchDomain;
-                const { RegisterKaanchDomain_point } = req.body;
-                if (!RegisterKaanchDomain_point) {
-                    return res.status(400).send({ status: false, message: "Please provide RegisterKaanchDomain_point along with 'RegisterKaanchDomain' field." })
-                }
-                const RegisterKaanchDomainPoint = await Point_Calculation.updateOne({ user_id: user._id }, { RegisterKaanchDomain_point });
-            } else {
-                alreadyUpdatedFields.push("RegisterKaanchDomain");
-                return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
+            const { RegisterKaanchDomain_point } = req.body;
+
+            // Validate point value
+            if (RegisterKaanchDomain_point === undefined || isNaN(RegisterKaanchDomain_point)) {
+                return res.status(400).send({
+                    status: false,
+                    message: "Please provide a numeric RegisterKaanchDomain_point along with the 'RegisterKaanchDomain' field."
+                });
             }
+
+            // Push new domain data to user's mainnet data
+            mainnetUpdates.$push = {
+                RegisterKaanchDomain: { $each: Array.isArray(RegisterKaanchDomain) ? RegisterKaanchDomain : [RegisterKaanchDomain] }
+            };
+
+            // Update points
+            await Point_Calculation.updateOne(
+                { user_id: user._id },
+                { $inc: { RegisterKaanchDomain_point: parseInt(RegisterKaanchDomain_point) } },
+                { upsert: true }
+            );
         }
+
 
         if (buy_kaanch_now !== undefined) {
             if (!mainNetData.buy_kaanch_now) {
@@ -607,42 +631,10 @@ const updateUserDetails = async (req, res) => {
             const currentPoints = parseInt(user.points);
             let pointsToAdd = 0;
 
-            // mainNet bridge refferal_point (whoRefferMe)
-            // if (mainnetUpdates.bridge !== undefined && mainnetUpdates.bridge !== "" && mainnetUpdates.check_holding !== undefined && mainnetUpdates.check_holding !== "") {
-            //     if (user.mainnetData.bridge.length < 1 && user.mainnetData.check_holding.length < 1) {
-
-            //         pointsToAdd = 5;
-
-            //         const whorefferdMe = await User.findOne({ invide_code: req.user.referralId });
-
-            //         if (whorefferdMe) {
-            //             if (!whorefferdMe.address === process.env.ADMIN_ADDRESS) {
-            //                 const currentPointsWhoRefferdMe = parseInt(whorefferdMe.points);
-            //                 const bridgePoints = parseInt(whorefferdMe.refferal_bridge_complition_points);
-            //                 await User.findOneAndUpdate(
-            //                     { _id: whorefferdMe._id },
-            //                     {
-            //                         points: (currentPointsWhoRefferdMe + 1).toString(),
-            //                         refferal_bridge_complition_points: bridgePoints + 1,
-            //                     }
-            //                 );
-            //             }
-
-            //         }
-            //     }
-            // }
-
             const hasBridgeBefore = user.mainnetData.bridge.length > 0;
-            // console.log("hasBridgeBefore:", hasBridgeBefore)
-
             const hasHoldingBefore = user.mainnetData.check_holding.length > 0;
-            // console.log("hasHoldingBefore:", hasHoldingBefore)
-
             const hasUpdatedBridgeNow = mainnetUpdates.bridge !== undefined && mainnetUpdates.bridge.length > 0;
-            // console.log("hasUpdatedBridgeNow:", hasUpdatedBridgeNow)
-
             const hasUpdatedHoldingNow = mainnetUpdates.check_holding !== undefined && mainnetUpdates.check_holding.length > 0;
-            // console.log("hasUpdatedHoldingNow:", hasUpdatedHoldingNow)
 
             // If this is the first time either bridge or check_holding is updated
             if ((!hasBridgeBefore && hasUpdatedBridgeNow) || (!hasHoldingBefore && hasUpdatedHoldingNow)) {
@@ -671,23 +663,9 @@ const updateUserDetails = async (req, res) => {
                         // ✅ Update points and bridge completion count in User collection
                         const currentPoints = parseInt(whorefferdMe.points);
                         const bridgePoints = parseInt(whorefferdMe.refferal_bridge_complition_points);
-
-                        await User.updateOne(
-                            { _id: whorefferdMe._id },
-                            {
-                                $set: {
-                                    points: (currentPoints + 5).toString(),
-                                    refferal_bridge_complition_points: bridgePoints + 1
-                                }
-                            }
-                        );
                     }
                 }
             }
-
-
-
-
 
             // mainNet check_holding point (me and whoRefferMe both)
             if (mainnetUpdates.check_holding !== undefined & mainnetUpdates.check_holding !== "") {
@@ -695,14 +673,6 @@ const updateUserDetails = async (req, res) => {
                     const { check_holding_point } = req.body;
                 }
             }
-
-            // if (mainnetUpdates.mainnet_faucet_claim && !user.mainnetData.mainnet_faucet_claim) {
-            //     pointsToAdd += 1;
-            // }
-
-            // if (mainnetUpdates.RegisterKaanchDomain && !user.mainnetData.RegisterKaanchDomain) {
-            //     pointsToAdd += 1;
-            // }
 
             if (mainnetUpdates.buy_kaanch_now && !user.mainnetData.buy_kaanch_now) {
                 pointsToAdd += 1;

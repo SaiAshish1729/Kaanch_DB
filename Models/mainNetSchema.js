@@ -7,7 +7,7 @@ const mainNetSchema = new mongoose.Schema({
         required: true,
     },
     bridge: {
-        type: [String],
+        type: [Object],
         default: []
     },
     // mainnet_faucet_claim: {
@@ -15,8 +15,8 @@ const mainNetSchema = new mongoose.Schema({
     //     default: false
     // },
     RegisterKaanchDomain: {
-        type: String,
-        default: null
+        type: [Object],
+        default: []
     },
 
     // buy_kaanch_now: {
