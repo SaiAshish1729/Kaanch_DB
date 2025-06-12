@@ -38,12 +38,24 @@ const Authentication = async (req, res, next) => {
             }
         },
         { $unwind: { path: "$mainnetData", preserveNullAndEmptyArrays: true } },
+
+        {
+            $lookup: {
+                from: "point_calculations",
+                localField: "_id",
+                foreignField: "user_id",
+                as: "pointCalculation"
+            }
+        },
+        { $unwind: { path: "$pointCalculation", preserveNullAndEmptyArrays: true } },
     ]);
     if (rootUser.length === 0) {
         return res.status(404).send({ data: { message: "User not found with this token.", status: false } })
     }
-
+    // console.log(rootUser)
     const objData = rootUser[0];
+    // console.log(objData)
+    const pointCalc = objData?.pointCalculation || {};
     const customResponse = {
         _id: objData?._id,
         // jwtToken: objData?.jwtToken,
@@ -59,12 +71,31 @@ const Authentication = async (req, res, next) => {
         Join_Group: objData?.testnetData.Join_Group,
         testnet_faucet_claim: objData?.testnetData.testnet_faucet_claim,
         hashes: objData?.testnetData.hashes,
-        GenerateMainnetAccessCode: objData?.testnetData.GenerateMainnetAccessCode,
+        // GenerateMainnetAccessCode: objData?.testnetData.GenerateMainnetAccessCode,
 
         // mainNet
         bridge: objData?.mainnetData.bridge,
-        mainnet_faucet_claim: objData?.mainnetData.mainnet_faucet_claim,
+        // mainnet_faucet_claim: objData?.mainnetData.mainnet_faucet_claim,
         RegisterKaanchDomain: objData?.mainnetData.RegisterKaanchDomain,
+        check_holding: objData?.mainnetData.check_holding[0],
+        // point_calculation
+        points: {
+            twitter_point: objData?.pointCalculation.twitter_point,
+            retweet_point: objData?.pointCalculation.retweet_point,
+            join_group_point: objData?.pointCalculation.join_group_point,
+            bridge_point: objData?.pointCalculation.bridge_point,
+            check_holding_point: objData?.pointCalculation.check_holding_point,
+            RegisterKaanchDomain_point: objData?.pointCalculation.RegisterKaanchDomain_point,
+            per_refferal_point: objData?.pointCalculation.per_refferal_point,
+            total_points:
+                (pointCalc.twitter_point || 0) +
+                (pointCalc.retweet_point || 0) +
+                (pointCalc.join_group_point || 0) +
+                (pointCalc.bridge_point || 0) +
+                (pointCalc.check_holding_point || 0) +
+                (pointCalc.RegisterKaanchDomain_point || 0) +
+                (pointCalc.per_refferal_point || 0)
+        }
     }
     // console.log(customResponse)
     req.user = objData;
