@@ -30,8 +30,8 @@ const refferedUser = async (req, res) => {
                     return res.status(400).json({ data: { status: false, message: "Referral ID missing" } });
                 }
                 let referralUser = await User.findOne({ invide_code: referralId });
-                // console.log(referralId)
-                if (!referralUser) {
+                console.log(referralUser)
+                if (!referralUser || referralUser == null) {
                     return res.status(404).json({ data: { status: false, message: "Invalid referral code" } });
                 }
                 const token = generateJWTtoken(address);
