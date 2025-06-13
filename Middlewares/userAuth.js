@@ -99,7 +99,7 @@ const Authentication = async (req, res, next) => {
     }
     // console.log(customResponse)
     req.user = objData;
-    console.log(objData)
+    // console.log(objData)
 
     req.customizedUser = customResponse
     next();
