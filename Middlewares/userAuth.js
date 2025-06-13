@@ -77,7 +77,7 @@ const Authentication = async (req, res, next) => {
         bridge: objData?.mainnetData.bridge,
         // mainnet_faucet_claim: objData?.mainnetData.mainnet_faucet_claim,
         RegisterKaanchDomain: objData?.mainnetData.RegisterKaanchDomain,
-        check_holding: objData?.mainnetData.check_holding[0],
+        check_holding: objData?.mainnetData.check_holding,
         // point_calculation
         points: {
             twitter_point: objData?.pointCalculation.twitter_point,
@@ -99,6 +99,8 @@ const Authentication = async (req, res, next) => {
     }
     // console.log(customResponse)
     req.user = objData;
+    console.log(objData)
+
     req.customizedUser = customResponse
     next();
 
