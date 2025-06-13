@@ -424,12 +424,8 @@ const updateUserDetails = async (req, res) => {
             RegisterKaanchDomain, buy_kaanch_now, check_holding
         } = req.body;
 
-        // const testNetData = await Test_Net.findOne({ user_id: userId });
-        // const mainNetData = await Main_Net.findOne({ user_id: userId });
         const testNetData = user.testnetData;
         const mainNetData = user.mainnetData;
-        const pointCalculationData = user.pointCalculation;
-
 
         if (!testNetData || !mainNetData) {
             return res.status(404).send({ data: { status: false, message: "User's testnet or mainnet data not found" } });
@@ -664,10 +660,41 @@ const updateUserDetails = async (req, res) => {
 // top 50 highest point users
 const topFiftyPointUsers = async (req, res) => {
     try {
+        // const topUsers = await User.aggregate([
+        //     {
+        //         $match: {
+        //             address: { $ne: process.env.ADMIN_ADDRESS } // Exclude address "Admin"
+        //         }
+        //     },
+        //     {
+        //         $addFields: {
+        //             pointsAsNumber: { $toInt: "$points" }
+        //         }
+        //     },
+        //     {
+        //         $sort: { pointsAsNumber: -1 } // Descending
+        //     },
+        //     {
+        //         $limit: 50
+        //     },
+        //     {
+        //         $project: {
+        //             _id: 1,
+        //             address: 1,
+        //             referralId: 1,
+        //             invide_code: 1,
+        //             points: 1
+        //         }
+        //     },
+        //     {
+
+        //     }
+        // ]).populate("Point_Calculation");
+
         const topUsers = await User.aggregate([
             {
                 $match: {
-                    address: { $ne: process.env.ADMIN_ADDRESS } // Exclude address "Admin"
+                    address: { $ne: process.env.ADMIN_ADDRESS }
                 }
             },
             {
@@ -676,10 +703,39 @@ const topFiftyPointUsers = async (req, res) => {
                 }
             },
             {
-                $sort: { pointsAsNumber: -1 } // Descending
+                $sort: { pointsAsNumber: -1 }
             },
             {
                 $limit: 50
+            },
+            {
+                $lookup: {
+                    from: "point_calculations",
+                    localField: "_id",
+                    foreignField: "user_id",
+                    as: "pointCalculation"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$pointCalculation",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $addFields: {
+                    total_points: {
+                        $add: [
+                            "$pointCalculation.twitter_point",
+                            "$pointCalculation.retweet_point",
+                            "$pointCalculation.join_group_point",
+                            "$pointCalculation.bridge_point",
+                            "$pointCalculation.check_holding_point",
+                            "$pointCalculation.RegisterKaanchDomain_point",
+                            "$pointCalculation.per_refferal_point"
+                        ]
+                    }
+                }
             },
             {
                 $project: {
@@ -687,7 +743,9 @@ const topFiftyPointUsers = async (req, res) => {
                     address: 1,
                     referralId: 1,
                     invide_code: 1,
-                    points: 1
+                    points: 1,
+                    // pointCalculation: 1,
+                    total_points: 1
                 }
             }
         ]);
