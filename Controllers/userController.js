@@ -669,17 +669,6 @@ const topFiftyPointUsers = async (req, res) => {
                 }
             },
             {
-                $addFields: {
-                    pointsAsNumber: { $toInt: "$points" }
-                }
-            },
-            {
-                $sort: { pointsAsNumber: -1 }
-            },
-            {
-                $limit: 50
-            },
-            {
                 $lookup: {
                     from: "point_calculations",
                     localField: "_id",
@@ -709,17 +698,23 @@ const topFiftyPointUsers = async (req, res) => {
                 }
             },
             {
+                $sort: { total_points: -1 }
+            },
+            {
+                $limit: 50
+            },
+            {
                 $project: {
                     _id: 1,
                     address: 1,
                     referralId: 1,
                     invide_code: 1,
                     points: 1,
-                    // pointCalculation: 1,
                     total_points: 1
                 }
             }
         ]);
+
 
         return res.status(200).send({
             data: {
