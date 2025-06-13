@@ -660,8 +660,6 @@ const updateUserDetails = async (req, res) => {
 // top 50 highest point users
 const topFiftyPointUsers = async (req, res) => {
     try {
-
-
         const topUsers = await User.aggregate([
             {
                 $match: {
