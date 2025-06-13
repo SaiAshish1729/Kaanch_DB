@@ -660,36 +660,7 @@ const updateUserDetails = async (req, res) => {
 // top 50 highest point users
 const topFiftyPointUsers = async (req, res) => {
     try {
-        // const topUsers = await User.aggregate([
-        //     {
-        //         $match: {
-        //             address: { $ne: process.env.ADMIN_ADDRESS } // Exclude address "Admin"
-        //         }
-        //     },
-        //     {
-        //         $addFields: {
-        //             pointsAsNumber: { $toInt: "$points" }
-        //         }
-        //     },
-        //     {
-        //         $sort: { pointsAsNumber: -1 } // Descending
-        //     },
-        //     {
-        //         $limit: 50
-        //     },
-        //     {
-        //         $project: {
-        //             _id: 1,
-        //             address: 1,
-        //             referralId: 1,
-        //             invide_code: 1,
-        //             points: 1
-        //         }
-        //     },
-        //     {
 
-        //     }
-        // ]).populate("Point_Calculation");
 
         const topUsers = await User.aggregate([
             {
