@@ -424,8 +424,12 @@ const updateUserDetails = async (req, res) => {
             RegisterKaanchDomain, buy_kaanch_now, check_holding
         } = req.body;
 
-        const testNetData = await Test_Net.findOne({ user_id: userId });
-        const mainNetData = await Main_Net.findOne({ user_id: userId });
+        // const testNetData = await Test_Net.findOne({ user_id: userId });
+        // const mainNetData = await Main_Net.findOne({ user_id: userId });
+        const testNetData = user.testnetData;
+        const mainNetData = user.mainnetData;
+        const pointCalculationData = user.pointCalculation;
+
 
         if (!testNetData || !mainNetData) {
             return res.status(404).send({ data: { status: false, message: "User's testnet or mainnet data not found" } });
@@ -534,50 +538,32 @@ const updateUserDetails = async (req, res) => {
                 return res.status(400).send({ status: false, message: "`bridge` must be an array." });
             }
 
-            const existingBridge = Array.isArray(mainNetData.bridge) ? mainNetData.bridge : [];
-            mainnetUpdates.bridge = [...new Set([...existingBridge, ...bridge])];
+            mainnetUpdates.bridge = [...new Set([...bridge])];
             // add point here
             const { bridge_point } = req.body;
             if (!bridge_point) {
                 return res.status(400).send({ status: false, message: "'bridge_point' is required along with bridge" })
             }
-            const bridgePoint = await Point_Calculation.updateOne({ user_id: user._id }, { bridge_point });
+            await Point_Calculation.updateOne({ user_id: user._id }, { bridge_point });
         }
 
-        // if (RegisterKaanchDomain !== undefined) {
-        //     if (!mainNetData.RegisterKaanchDomain) {
-        //         mainnetUpdates.RegisterKaanchDomain = RegisterKaanchDomain;
-        //         const { RegisterKaanchDomain_point } = req.body;
-        //         if (!RegisterKaanchDomain_point) {
-        //             return res.status(400).send({ status: false, message: "Please provide RegisterKaanchDomain_point along with 'RegisterKaanchDomain' field." })
-        //         }
-        //         const RegisterKaanchDomainPoint = await Point_Calculation.updateOne({ user_id: user._id }, { RegisterKaanchDomain_point });
-        //     } else {
-        //         alreadyUpdatedFields.push("RegisterKaanchDomain");
-        //         return res.status(403).send({ data: { status: false, message: `You have already updated ${alreadyUpdatedFields[0]}.` } });
-        //     }
-        // }
         if (RegisterKaanchDomain !== undefined) {
             const { RegisterKaanchDomain_point } = req.body;
-
+            if (!Array.isArray(RegisterKaanchDomain)) {
+                return res.status(400).send({ status: false, message: "`RegisterKaanchDomain` must be an array." });
+            }
             // Validate point value
-            if (RegisterKaanchDomain_point === undefined || isNaN(RegisterKaanchDomain_point)) {
+            if (RegisterKaanchDomain_point === undefined || RegisterKaanchDomain_point === "") {
                 return res.status(400).send({
                     status: false,
                     message: "Please provide a numeric RegisterKaanchDomain_point along with the 'RegisterKaanchDomain' field."
                 });
             }
-
-            // Push new domain data to user's mainnet data
-            mainnetUpdates.$push = {
-                RegisterKaanchDomain: { $each: Array.isArray(RegisterKaanchDomain) ? RegisterKaanchDomain : [RegisterKaanchDomain] }
-            };
-
+            mainnetUpdates.RegisterKaanchDomain = [...new Set([...RegisterKaanchDomain])]
             // Update points
             await Point_Calculation.updateOne(
                 { user_id: user._id },
-                { $inc: { RegisterKaanchDomain_point: parseInt(RegisterKaanchDomain_point) } },
-                { upsert: true }
+                { RegisterKaanchDomain_point }
             );
         }
 
@@ -595,9 +581,10 @@ const updateUserDetails = async (req, res) => {
             if (!Array.isArray(check_holding)) {
                 return res.status(400).send({ data: { status: false, message: "`check_holding` must be an array of objects." } });
             }
-
-            const existingHoldings = Array.isArray(mainNetData.check_holding) ? mainNetData.check_holding : [];
-            const mergedHoldings = [...existingHoldings, ...check_holding];
+            // const existingHoldings = Array.isArray(mainNetData.check_holding) ? mainNetData.check_holding : [];
+            const mergedHoldings = [
+                // ...existingHoldings,
+                ...check_holding];
             mainnetUpdates.check_holding = mergedHoldings;
             // add point here 
             const { check_holding_point } = req.body;
@@ -610,13 +597,6 @@ const updateUserDetails = async (req, res) => {
 
         if (Object.keys(testnetUpdates).length > 0) {
             await Test_Net.updateOne({ user_id: userId }, { $set: testnetUpdates });
-
-            if (addHashPoints) {
-                const currentPoints = parseInt(user.points);
-                const newPoint = currentPoints + 100;
-                await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() });
-            }
-
             return res.status(200).send({
                 data: {
                     status: true,
@@ -627,9 +607,6 @@ const updateUserDetails = async (req, res) => {
 
         if (Object.keys(mainnetUpdates).length > 0) {
             await Main_Net.updateOne({ user_id: userId }, { $set: mainnetUpdates });
-
-            const currentPoints = parseInt(user.points);
-            let pointsToAdd = 0;
 
             const hasBridgeBefore = user.mainnetData.bridge.length > 0;
             const hasHoldingBefore = user.mainnetData.check_holding.length > 0;
@@ -646,7 +623,7 @@ const updateUserDetails = async (req, res) => {
                     const alreadyRewarded = referrerPoints?.referred_users_awarded?.includes(user._id.toString());
 
                     if (!alreadyRewarded) {
-                        // ✅ Give 1 point to the referrer and record the referral
+                        // ✅ Give 5 point to the referrer and record the referral
                         await Point_Calculation.updateOne(
                             { user_id: whorefferdMe._id },
                             {
@@ -659,31 +636,9 @@ const updateUserDetails = async (req, res) => {
                             },
                             { upsert: true }
                         );
-
-                        // ✅ Update points and bridge completion count in User collection
-                        const currentPoints = parseInt(whorefferdMe.points);
-                        const bridgePoints = parseInt(whorefferdMe.refferal_bridge_complition_points);
                     }
                 }
             }
-
-            // mainNet check_holding point (me and whoRefferMe both)
-            if (mainnetUpdates.check_holding !== undefined & mainnetUpdates.check_holding !== "") {
-                if (user.mainnetData.check_holding.length < 1) {
-                    const { check_holding_point } = req.body;
-                }
-            }
-
-            if (mainnetUpdates.buy_kaanch_now && !user.mainnetData.buy_kaanch_now) {
-                pointsToAdd += 1;
-            }
-            if (mainnetUpdates.check_holding && mainnetUpdates.check_holding.length > 0) {
-                pointsToAdd += 1;
-            }
-
-
-            const newPoint = currentPoints + pointsToAdd;
-            await User.findOneAndUpdate({ _id: userId }, { points: newPoint.toString() });
 
             return res.status(200).send({
                 data: {
@@ -692,9 +647,6 @@ const updateUserDetails = async (req, res) => {
                 }
             });
         }
-
-
-
         return res.status(200).send({
             data: {
                 status: false,
@@ -758,7 +710,6 @@ const topFiftyPointUsers = async (req, res) => {
 const referalCalculations = async (req, res) => {
     try {
         const loggedInUser = req.user;
-        // console.log(loggedInUser.pointCalculation.referred_users_awarded.length)
         const { address } = req.query;
         if (!address) {
             return res.status(400).send({ data: { status: false, message: "Address is missing." } })
