@@ -13,8 +13,7 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
 
-// DB Connection
-Connection();
+
 //Routes
 app.use("/", userRoute);
 
@@ -25,6 +24,8 @@ app.use('*', (req, res) => {
     res.status(404).json({ message: 'Route not found' });
 });
 
-app.listen(port, () => {
-    console.log(`Listning on port http://localhost:${port}`);
-})
+Connection().then(() => {
+    app.listen(port, () => {
+        console.log(`Listening at http://localhost:${port}`);
+    });
+});

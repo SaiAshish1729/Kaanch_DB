@@ -1,18 +1,25 @@
 const mongoose = require("mongoose");
+const URL = "mongodb://127.0.0.1:27017/Kaanch_DB"
 
+const MONGO_URL = process.env.URL
+let cached = global.mongoose;
+if (!cached) {
+    cached = global.mongoose = { conn: null, promise: null };
+}
 const Connection = async () => {
-    const URL = "mongodb://127.0.0.1:27017/Kaanch_DB"
-    // const URL = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.iicjf2c.mongodb.net/Kaanch-DB`
-
+    if (cached.conn) {
+        return cached.conn; // Use existing connection
+    }
+    if (!cached.promise) {
+        cached.promise = mongoose.connect(MONGO_URL);
+    }
     try {
-        await mongoose.connect(
-            // URL,
-            process.env.URL,
-            // { useNewUrlParser: true, useUnifiedTopology: true }
-        )
-        console.log("Database Connected Successfully!");
+        cached.conn = await cached.promise;
+        console.log("Database Connected Successfully ✅");
+        return cached.conn;
     } catch (error) {
         console.log("Error whine Connection", error)
+        throw error;
     }
 }
 module.exports = Connection
