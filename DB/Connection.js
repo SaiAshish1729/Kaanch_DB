@@ -11,7 +11,7 @@ const Connection = async () => {
         return cached.conn; // Use existing connection
     }
     if (!cached.promise) {
-        cached.promise = mongoose.connect(MONGO_URL);
+        cached.promise = mongoose.connect(URL);
     }
     try {
         cached.conn = await cached.promise;
