@@ -9,7 +9,12 @@ const userRoute = require("./Routes/userRoutes.js");
 // dotenv.config();
 const port = process.env.APP_PORT || 5000;
 app.use(express.json());
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+    origin: "https://airdrop.kaanch.com",
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.urlencoded({ extended: true }));
 
 
